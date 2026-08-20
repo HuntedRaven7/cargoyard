@@ -142,7 +142,7 @@ SET_NAME
 
 # Set variant-specific ARGs
 ARG BASE_IMAGE_NAME_DEFAULT
-ARG FEDORA_MAJOR_VERSION_DEFAULT
+ARG FEDORA_MAJOR_VERSION="44"
 
 ### MODIFICATIONS
 ## Make modifications desired in your image and install packages by modifying the build scripts.
