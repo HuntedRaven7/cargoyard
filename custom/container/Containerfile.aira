@@ -44,6 +44,7 @@ ARG UBLUE_IMAGE_TAG="stable"
 ARG VERSION=""
 ARG IMAGE_NAME="cargoyard-aira"
 
+# hadolint ignore=SC3040
 RUN <<SET_NAME
 #!/bin/bash
 set -euo pipefail
