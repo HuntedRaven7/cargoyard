@@ -90,14 +90,14 @@ sudoif command *args:
 #
 
 # Build the image using the specified parameters
-build $target_image=IMAGE_NAME $tag=DEFAULT_TAG:
+build $target_image=IMAGE_NAME $tag=DEFAULT_TAG $containerfile="custom/container/Containerfile.edward":
     #!/usr/bin/env bash
 
-    # Read the Fedora major version from Containerfile (single source of truth).
-    # The base image itself is pinned in the Containerfile FROM line.
-    fedora_version=$(grep -E '^ARG FEDORA_MAJOR_VERSION=' Containerfile | head -n1 | sed -E 's/^ARG FEDORA_MAJOR_VERSION="?([^"]+)"?/\1/')
+    # Read the Fedora major version from the per-variant Containerfile (single source of truth).
+    # The base image itself is pinned in that Containerfile's FROM line.
+    fedora_version=$(grep -E '^ARG FEDORA_MAJOR_VERSION=' "${containerfile}" | head -n1 | sed -E 's/^ARG FEDORA_MAJOR_VERSION="?([^"]+)"?/\1/')
     if [[ -z "${fedora_version:-}" ]]; then
-        echo "ERROR: Could not extract FEDORA_MAJOR_VERSION from Containerfile"
+        echo "ERROR: Could not extract FEDORA_MAJOR_VERSION from ${containerfile}"
         exit 1
     fi
 
@@ -125,7 +125,9 @@ build $target_image=IMAGE_NAME $tag=DEFAULT_TAG:
 
     BUILD_ARGS=()
     BUILD_ARGS+=("--build-arg" "VERSION=${ver}")
-    BUILD_ARGS+=("--build-arg" "IMAGE_VARIANT=${IMAGE_VARIANT}")
+    if [[ -n "${IMAGE_VARIANT:-}" ]]; then
+        BUILD_ARGS+=("--build-arg" "IMAGE_VARIANT=${IMAGE_VARIANT}")
+    fi
     if [[ -z "$(git status -s)" ]]; then
         BUILD_ARGS+=("--build-arg" "SHA_HEAD_SHORT=$(git rev-parse --short HEAD)")
     fi
@@ -147,7 +149,7 @@ build $target_image=IMAGE_NAME $tag=DEFAULT_TAG:
     LABELS+=("--label" "org.opencontainers.image.title=${target_image}")
     LABELS+=("--label" "org.opencontainers.image.version=${ver}")
     LABELS+=("--label" "org.opencontainers.image.description=${IMAGE_DESC:-My Customized Universal Blue Image}")
-    LABELS+=("--label" "org.opencontainers.image.source=https://github.com/${GITHUB_REPOSITORY_OWNER:-}/${target_image}/blob/${GITHUB_SHA:-}/Containerfile")
+    LABELS+=("--label" "org.opencontainers.image.source=https://github.com/${GITHUB_REPOSITORY_OWNER:-}/${target_image}/blob/${GITHUB_SHA:-}/${containerfile}")
     LABELS+=("--label" "org.opencontainers.image.url=https://github.com/${GITHUB_REPOSITORY_OWNER:-}/${target_image}")
     LABELS+=("--label" "org.opencontainers.image.vendor=${IMAGE_VENDOR:-${REPO_ORG}}")
     LABELS+=("--label" "org.opencontainers.image.created=$(date -u +%Y\-%m\-%d\T%H\:%M\:%S\Z)")
@@ -171,6 +173,7 @@ build $target_image=IMAGE_NAME $tag=DEFAULT_TAG:
     fi
 
     ${PODMAN} build \
+        -f "${containerfile}" \
         "${BUILD_ARGS[@]}" \
         "${LABELS[@]}" \
         "${CACHE_ARGS[@]}" \
@@ -183,28 +186,28 @@ build $target_image=IMAGE_NAME $tag=DEFAULT_TAG:
 build-aira $tag=DEFAULT_TAG:
     #!/usr/bin/env bash
     set -euo pipefail
-    IMAGE_VARIANT=aira IMAGE_NAME="cargoyard-aira" just build "cargoyard-aira" "${tag}"
+    IMAGE_VARIANT=aira IMAGE_NAME="cargoyard-aira" just build "cargoyard-aira" "${tag}" "custom/container/Containerfile.aira"
 
 # Build the Edward image variant (GNOME with Silverblue base)
 [group('Image')]
 build-edward $tag=DEFAULT_TAG:
     #!/usr/bin/env bash
     set -euo pipefail
-    IMAGE_VARIANT=edward IMAGE_NAME="cargoyard" just build "cargoyard" "${tag}"
+    IMAGE_VARIANT=edward IMAGE_NAME="cargoyard" just build "cargoyard" "${tag}" "custom/container/Containerfile.edward"
 
 # Build the Server image variant (Minimal server with uCore base)
 [group('Image')]
 build-server $tag=DEFAULT_TAG:
     #!/usr/bin/env bash
     set -euo pipefail
-    IMAGE_VARIANT=server IMAGE_NAME="cargoyard-server" just build "cargoyard-server" "${tag}"
+    IMAGE_VARIANT=server IMAGE_NAME="cargoyard-server" just build "cargoyard-server" "${tag}" "custom/container/Containerfile.server"
 
 # Build the CRMY image variant (CRM server with Fedora bootc base)
 [group('Image')]
 build-crmy $tag=DEFAULT_TAG:
     #!/usr/bin/env bash
     set -euo pipefail
-    IMAGE_VARIANT=crmy IMAGE_NAME="cargoyard-crmy" just build "cargoyard-crmy" "${tag}"
+    IMAGE_VARIANT=crmy IMAGE_NAME="cargoyard-crmy" just build "cargoyard-crmy" "${tag}" "custom/container/Containerfile.crmy"
 
 # Split the image for smaller updates (New)!
 # Rechunks the existing image with chunkah for better resumability.
