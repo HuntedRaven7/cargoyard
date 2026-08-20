@@ -1,4 +1,4 @@
-# Copilot Instructions for journeyfin bootc Image Template
+# Copilot Instructions for cargoyard bootc Image Template
 
 ## Start here
 
@@ -139,5 +139,5 @@ Before marking work done:
 - [ ] Included that learning in this PR?
 
 **Last Updated**: 2026-08-05
-**Template Version**: journeyfin (Agent UX Overhaul)
+**Template Version**: cargoyard (Agent UX Overhaul)
 **Maintainer**: Universal Blue Community

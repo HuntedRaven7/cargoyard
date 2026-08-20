@@ -1,4 +1,4 @@
-export IMAGE_NAME := env("IMAGE_NAME", "journeyfin")
+export IMAGE_NAME := env("IMAGE_NAME", "cargoyard")
 export DEFAULT_TAG := env("DEFAULT_TAG", "stable")
 export PODMAN := env("PODMAN", "podman")
 export REPO_ORG := env("GITHUB_REPOSITORY_OWNER", "huntedraven7")
@@ -183,28 +183,28 @@ build $target_image=IMAGE_NAME $tag=DEFAULT_TAG:
 build-aira $tag=DEFAULT_TAG:
     #!/usr/bin/env bash
     set -euo pipefail
-    IMAGE_VARIANT=aira IMAGE_NAME="journeyfin-aira" just build "journeyfin-aira" "${tag}"
+    IMAGE_VARIANT=aira IMAGE_NAME="cargoyard-aira" just build "cargoyard-aira" "${tag}"
 
 # Build the Edward image variant (GNOME with Silverblue base)
 [group('Image')]
 build-edward $tag=DEFAULT_TAG:
     #!/usr/bin/env bash
     set -euo pipefail
-    IMAGE_VARIANT=edward IMAGE_NAME="journeyfin" just build "journeyfin" "${tag}"
+    IMAGE_VARIANT=edward IMAGE_NAME="cargoyard" just build "cargoyard" "${tag}"
 
 # Build the Server image variant (Minimal server with uCore base)
 [group('Image')]
 build-server $tag=DEFAULT_TAG:
     #!/usr/bin/env bash
     set -euo pipefail
-    IMAGE_VARIANT=server IMAGE_NAME="journeyfin-server" just build "journeyfin-server" "${tag}"
+    IMAGE_VARIANT=server IMAGE_NAME="cargoyard-server" just build "cargoyard-server" "${tag}"
 
 # Build the CRMY image variant (CRM server with Fedora bootc base)
 [group('Image')]
 build-crmy $tag=DEFAULT_TAG:
     #!/usr/bin/env bash
     set -euo pipefail
-    IMAGE_VARIANT=crmy IMAGE_NAME="journeyfin-crmy" just build "journeyfin-crmy" "${tag}"
+    IMAGE_VARIANT=crmy IMAGE_NAME="cargoyard-crmy" just build "cargoyard-crmy" "${tag}"
 
 # Split the image for smaller updates (New)!
 # Rechunks the existing image with chunkah for better resumability.
