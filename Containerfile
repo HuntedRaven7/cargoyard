@@ -45,18 +45,6 @@
 # Select which image variant to build. Default is "edward" (GNOME/Silverblue).
 ARG IMAGE_VARIANT="edward"
 
-# Validate variant - this ensures only supported variants are built
-# hadolint ignore=DL3061,SC3010,SC3014
-RUN <<VALIDATE
-#!/bin/bash
-set -euo pipefail
-if [[ "${IMAGE_VARIANT}" != "edward" && "${IMAGE_VARIANT}" != "aira" && "${IMAGE_VARIANT}" != "server" && "${IMAGE_VARIANT}" != "crmy" ]]; then
-    echo "ERROR: Invalid IMAGE_VARIANT '${IMAGE_VARIANT}'. Must be 'edward', 'aira', 'server', or 'crmy'."
-    exit 1
-fi
-echo "Building variant: ${IMAGE_VARIANT}"
-VALIDATE
-
 ###############################################################################
 # BASE IMAGE SELECTION (must be outside multi-stage due to Dockerfile limitations)
 ###############################################################################
@@ -116,6 +104,20 @@ FROM base-${IMAGE_VARIANT}
 # recognize your image. Change these to match your project name.
 # IMAGE_NAME is automatically set based on IMAGE_VARIANT
 ARG IMAGE_VARIANT="edward"
+
+# Validate variant - this ensures only supported variants are built.
+# (Must run inside a stage; a RUN before the first FROM is invalid Dockerfile syntax.)
+# hadolint ignore=SC3010,SC3014
+RUN <<VALIDATE
+#!/bin/bash
+set -euo pipefail
+if [[ "${IMAGE_VARIANT}" != "edward" && "${IMAGE_VARIANT}" != "aira" && "${IMAGE_VARIANT}" != "server" && "${IMAGE_VARIANT}" != "crmy" ]]; then
+    echo "ERROR: Invalid IMAGE_VARIANT '${IMAGE_VARIANT}'. Must be 'edward', 'aira', 'server', or 'crmy'."
+    exit 1
+fi
+echo "Building variant: ${IMAGE_VARIANT}"
+VALIDATE
+
 ARG IMAGE_VENDOR="huntedraven7"
 ARG UBLUE_IMAGE_TAG="stable"
 ARG VERSION=""
