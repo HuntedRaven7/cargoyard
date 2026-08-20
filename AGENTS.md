@@ -1,4 +1,4 @@
-# Copilot Instructions for finpilot bootc Image Template
+# Copilot Instructions for journeyfin bootc Image Template
 
 ## Start here
 
@@ -139,5 +139,5 @@ Before marking work done:
 - [ ] Included that learning in this PR?
 
 **Last Updated**: 2026-08-05
-**Template Version**: finpilot (Agent UX Overhaul)
+**Template Version**: journeyfin (Agent UX Overhaul)
 **Maintainer**: Universal Blue Community

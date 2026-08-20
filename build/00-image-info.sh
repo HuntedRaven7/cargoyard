@@ -9,7 +9,7 @@ set -euo pipefail
 # This script is bluefin-pattern: each consumer provides its own branding.
 #
 # Required env vars (set as ARGs in Containerfile):
-#   IMAGE_NAME          - Image name (e.g. finpilot, my-custom-os)
+#   IMAGE_NAME          - Image name (e.g. journeyfin, my-custom-os)
 #   IMAGE_VENDOR        - Image vendor/owner (e.g. github username or org)
 #   UBLUE_IMAGE_TAG     - Image tag/stream (e.g. stable, testing, latest)
 #   BASE_IMAGE_NAME     - Base image name (e.g. silverblue)
