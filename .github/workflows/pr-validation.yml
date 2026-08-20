@@ -25,5 +25,5 @@ jobs:
         uses: projectbluefin/actions/bootc-build/validate-pr@8906e13e3ac1654504e75ad27440bffb28e52fbc # v1
         with:
           shellcheck-glob: "build/*.sh"
-          dockerfile: "Containerfile"
+          dockerfile: "custom/container/Containerfile.edward"
           hadolint-config: ".hadolint.yaml"

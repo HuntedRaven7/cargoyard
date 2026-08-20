@@ -130,7 +130,7 @@ Click "Use this template" to create a new repository from this template.
 
 Important: Change `cargoyard` to your repository name in these 7 files:
 
-1. `Containerfile` (`# Name:` comment and `ARG IMAGE_NAME`): `# Name: your-repo-name`
+1. `custom/container/Containerfile.edward` (`ARG IMAGE_NAME`): `# Name: your-repo-name`
 2. `Justfile` (`export IMAGE_NAME := env("IMAGE_NAME", ...)`): `your-repo-name`
 3. `README.md` (title): `# your-repo-name`
 4. `artifacthub-repo.yml` (`repositoryID`): `repositoryID: your-repo-name`
@@ -193,7 +193,7 @@ improvements with every future cargoyard user.
 
 ### 6. Customize Your Image
 
-Choose your base image in `Containerfile` (the `FROM` line):
+Choose your base image in `custom/container/Containerfile.<variant>` (the `FROM` line):
 
 ```dockerfile
 FROM quay.io/fedora-ostree-desktops/silverblue:44@sha256:...
