@@ -46,6 +46,7 @@
 ARG IMAGE_VARIANT="edward"
 
 # Validate variant - this ensures only supported variants are built
+# hadolint ignore=DL3061,SC3010,SC3014
 RUN <<VALIDATE
 #!/bin/bash
 set -euo pipefail
@@ -121,6 +122,7 @@ ARG VERSION=""
 
 # Set IMAGE_NAME based on variant
 ARG IMAGE_NAME_DEFAULT
+# hadolint ignore=SC3010,SC3014
 RUN <<SET_NAME
 #!/bin/bash
 set -euo pipefail
