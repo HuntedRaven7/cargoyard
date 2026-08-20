@@ -3,6 +3,7 @@ export DEFAULT_TAG := env("DEFAULT_TAG", "stable")
 export PODMAN := env("PODMAN", "podman")
 export REPO_ORG := env("GITHUB_REPOSITORY_OWNER", "huntedraven7")
 export bib_image := env("BIB_IMAGE", "quay.io/centos-bootc/bootc-image-builder:latest@sha256:2b52843ea2bfda73b0a08d97e76b734393b1d3a804681b9fabb26723bd3a2f0b")
+export IMAGE_VARIANT := env("IMAGE_VARIANT", "edward")
 
 alias build-vm := build-qcow2
 alias rebuild-vm := rebuild-qcow2
@@ -124,6 +125,7 @@ build $target_image=IMAGE_NAME $tag=DEFAULT_TAG:
 
     BUILD_ARGS=()
     BUILD_ARGS+=("--build-arg" "VERSION=${ver}")
+    BUILD_ARGS+=("--build-arg" "IMAGE_VARIANT=${IMAGE_VARIANT}")
     if [[ -z "$(git status -s)" ]]; then
         BUILD_ARGS+=("--build-arg" "SHA_HEAD_SHORT=$(git rev-parse --short HEAD)")
     fi
@@ -175,6 +177,66 @@ build $target_image=IMAGE_NAME $tag=DEFAULT_TAG:
         --pull=newer \
         --tag "${target_image}:${tag}" \
         .
+
+# Build the Aira image variant (KDE Plasma with Bazzite base)
+[group('Image')]
+build-aira $tag=DEFAULT_TAG:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    IMAGE_VARIANT=aira IMAGE_NAME="journeyfin-aira" just build "journeyfin-aira" "${tag}"
+
+# Build the Edward image variant (GNOME with Silverblue base)
+[group('Image')]
+build-edward $tag=DEFAULT_TAG:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    IMAGE_VARIANT=edward IMAGE_NAME="journeyfin" just build "journeyfin" "${tag}"
+
+# Build the Server image variant (Minimal server with uCore base)
+[group('Image')]
+build-server $tag=DEFAULT_TAG:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    IMAGE_VARIANT=server IMAGE_NAME="journeyfin-server" just build "journeyfin-server" "${tag}"
+
+# Build the CRMY image variant (CRM server with Fedora bootc base)
+[group('Image')]
+build-crmy $tag=DEFAULT_TAG:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    IMAGE_VARIANT=crmy IMAGE_NAME="journeyfin-crmy" just build "journeyfin-crmy" "${tag}"
+
+# Split the image for smaller updates (New)!
+# Rechunks the existing image with chunkah for better resumability.
+[group('Image')]
+rechunk $target_image=IMAGE_NAME $tag=DEFAULT_TAG:
+    #!/usr/bin/env bash
+    set -xeuo pipefail
+    # TODO: pin chunkah image to hash once mature enough
+    # You may run into space issues on github runners as we are making a
+    # complete copy of the image, which likely has no shared layers, unless your
+    # base image is also using chunkah
+    CHUNKAH_CONFIG_FILE="$(mktemp)"
+    # You may omit the current directory here if you are confident that you
+    # won't run out of space on /tmp for your image
+    CHUNKAH_OUTPUT_DIR="$(mktemp -d ./"${target_image}"_chunkah_XXXXXX)"
+    trap 'rm -f "${CHUNKAH_CONFIG_FILE}"; rm -rf "${CHUNKAH_OUTPUT_DIR}"' EXIT
+    ${PODMAN} inspect "${target_image}:${tag}" > "${CHUNKAH_CONFIG_FILE}"
+    ${PODMAN} run --rm \
+        --mount=type=image,src="${target_image}:${tag}",target=/chunkah \
+        -v "${CHUNKAH_CONFIG_FILE}:/chunkah-config.json:ro,Z" \
+        -v "${CHUNKAH_OUTPUT_DIR}:/run/out:Z" \
+        quay.io/coreos/chunkah:latest \
+        build \
+        --verbose \
+        --compressed \
+        --max-layers 128 \
+        --prune /sysroot/ \
+        --label ostree.commit- --label ostree.final-diffid- \
+        --config /chunkah-config.json \
+        --output oci:/run/out/chunked
+    CHUNKED_IMAGE="$(${PODMAN} pull "oci:${CHUNKAH_OUTPUT_DIR}/chunked")"
+    ${PODMAN} tag "${CHUNKED_IMAGE}" "${target_image}:${tag}"
 
 # Tag images with the generated alias tags
 # Bluefin pattern: separate tagging from pushing

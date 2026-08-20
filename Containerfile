@@ -1,18 +1,22 @@
 ###############################################################################
-# PROJECT NAME CONFIGURATION
+# MULTI-IMAGE CONTAINERFILE
 ###############################################################################
-# Name: journeyfin
+# This Containerfile builds multiple image variants using the IMAGE_VARIANT ARG.
 #
-# IMPORTANT: Change "journeyfin" above to your desired project name.
-# This name should be used consistently throughout the repository in:
-#   - Justfile: export IMAGE_NAME := env("IMAGE_NAME", "your-name-here")
-#   - README.md: # your-name-here (title)
-#   - artifacthub-repo.yml: repositoryID: your-name-here
-#   - custom/ujust/README.md: localhost/your-name-here:stable (in bootc switch example)
+# Supported variants:
+#   - "edward" (default): GNOME desktop (Fedora Silverblue)
+#   - "aira": KDE desktop (Bazzite)
+#   - "server": Minimal server (uCore)
+#   - "crmy": CRM server (Fedora bootc)
 #
-# The project name defined here is the single source of truth for your
-# custom image's identity. When changing it, update all references above
-# to maintain consistency.
+# Usage:
+#   podman build --build-arg IMAGE_VARIANT=aira -t journeyfin-aira:stable .
+#   podman build --build-arg IMAGE_VARIANT=edward -t journeyfin:stable .
+#   podman build --build-arg IMAGE_VARIANT=server -t journeyfin-server:stable .
+#   podman build --build-arg IMAGE_VARIANT=crmy -t journeyfin-crmy:stable .
+#
+# The project name is defined by IMAGE_NAME which is automatically set based
+# on the IMAGE_VARIANT (journeyfin, journeyfin-aira, journeyfin-server, or journeyfin-crmy).
 ###############################################################################
 
 ###############################################################################
@@ -26,12 +30,37 @@
 #    - @projectbluefin/common - Desktop configuration shared with Aurora
 #    - @ublue-os/brew - Homebrew integration
 #
-# 2. Base Image Options (edit the FROM line below):
-#    - `quay.io/fedora-ostree-desktops/silverblue:44` (Fedora 44 and GNOME)
-#    - `quay.io/fedora-ostree-desktops/base-main:44` (Fedora 44, no desktop)
-#    - `quay.io/centos-bootc/centos-bootc:stream10` (CentOS-based)
+# 2. Base Image varies by variant:
+#    - edward: quay.io/fedora-ostree-desktops/silverblue:44 (Fedora 44, GNOME)
+#    - aira: ghcr.io/ublue-os/bazzite:stable (Fedora 42, KDE)
+#    - server: ghcr.io/ublue-os/ucore:stable (Minimal server)
+#    - crmy: quay.io/fedora/fedora-bootc:44 (Fedora bootc)
 #
 # See: https://docs.projectbluefin.io/contributing/ for architecture diagram
+###############################################################################
+
+###############################################################################
+# VARIANT SELECTION
+###############################################################################
+# Select which image variant to build. Default is "edward" (GNOME/Silverblue).
+ARG IMAGE_VARIANT="edward"
+
+# Validate variant - this ensures only supported variants are built
+RUN <<VALIDATE
+#!/bin/bash
+set -euo pipefail
+if [[ "${IMAGE_VARIANT}" != "edward" && "${IMAGE_VARIANT}" != "aira" && "${IMAGE_VARIANT}" != "server" && "${IMAGE_VARIANT}" != "crmy" ]]; then
+    echo "ERROR: Invalid IMAGE_VARIANT '${IMAGE_VARIANT}'. Must be 'edward', 'aira', 'server', or 'crmy'."
+    exit 1
+fi
+echo "Building variant: ${IMAGE_VARIANT}"
+VALIDATE
+
+###############################################################################
+# BASE IMAGE SELECTION (must be outside multi-stage due to Dockerfile limitations)
+###############################################################################
+# The base image is selected based on IMAGE_VARIANT.
+# NOTE: BuildKit/gapel multi-stage is used here - the base image varies by variant.
 ###############################################################################
 
 # OCI context images - imported below and pinned directly in their FROM lines.
@@ -45,22 +74,73 @@ FROM scratch AS ctx
 COPY build /build
 COPY custom /custom
 
+# Copy variant-specific system files
+COPY custom/system_files/edward /system_files/edward
+COPY custom/system_files/aira /system_files/aira
+COPY custom/system_files/server /system_files/server
+COPY custom/system_files/ai /system_files/ai
+
 # Copy from OCI containers to distinct subdirectories to avoid conflicts
 COPY --from=common /system_files /oci/common
 COPY --from=brew /system_files /oci/brew
 
-# Base Image - GNOME included (Fedora official OSTree desktop)
-# Renovate will keep the digest pin up to date.
-FROM quay.io/fedora-ostree-desktops/silverblue:44@sha256:1d1810dfd0e3fc41ec3bf2d6430963e9dda644e78472bae2005fca57c035201a
+###############################################################################
+# BASE IMAGES
+###############################################################################
+# Different base images for each variant
+###############################################################################
+
+# Edward: GNOME desktop (Fedora Silverblue)
+FROM quay.io/fedora-ostree-desktops/silverblue:44@sha256:1d1810dfd0e3fc41ec3bf2d6430963e9dda644e78472bae2005fca57c035201a AS base-edward
+
+# Aira: KDE desktop (Bazzite)
+FROM ghcr.io/ublue-os/bazzite:stable AS base-aira
+
+# Server: Minimal server (uCore)
+FROM ghcr.io/ublue-os/ucore:stable AS base-server
+
+# CRMY: CRM server (Fedora bootc)
+FROM quay.io/fedora/fedora-bootc:44 AS base-crmy
+
+###############################################################################
+# VARIANT IMAGES
+###############################################################################
+# Select the appropriate base image based on IMAGE_VARIANT
+###############################################################################
+
+# This stage selects the correct base image based on the variant
+FROM base-${IMAGE_VARIANT}
 
 # Image identity - these define how bootc, fastfetch, and the ublue ecosystem
 # recognize your image. Change these to match your project name.
-ARG IMAGE_NAME="journeyfin"
+# IMAGE_NAME is automatically set based on IMAGE_VARIANT
+ARG IMAGE_VARIANT="edward"
 ARG IMAGE_VENDOR="huntedraven7"
 ARG UBLUE_IMAGE_TAG="stable"
-ARG BASE_IMAGE_NAME="silverblue"
-ARG FEDORA_MAJOR_VERSION="44"
 ARG VERSION=""
+
+# Set IMAGE_NAME based on variant
+ARG IMAGE_NAME_DEFAULT
+RUN <<SET_NAME
+#!/bin/bash
+set -euo pipefail
+if [[ "${IMAGE_VARIANT}" == "aira" ]]; then
+    IMAGE_NAME="journeyfin-aira"
+elif [[ "${IMAGE_VARIANT}" == "server" ]]; then
+    IMAGE_NAME="journeyfin-server"
+elif [[ "${IMAGE_VARIANT}" == "crmy" ]]; then
+    IMAGE_NAME="journeyfin-crmy"
+else
+    IMAGE_NAME="journeyfin"
+fi
+echo "IMAGE_NAME=${IMAGE_NAME}"
+# Write to /etc/environment for build scripts
+echo "IMAGE_NAME=${IMAGE_NAME}" >> /etc/environment
+SET_NAME
+
+# Set variant-specific ARGs
+ARG BASE_IMAGE_NAME_DEFAULT
+ARG FEDORA_MAJOR_VERSION_DEFAULT
 
 ### MODIFICATIONS
 ## Make modifications desired in your image and install packages by modifying the build scripts.
@@ -77,7 +157,12 @@ RUN --mount=type=bind,from=ctx,source=/,target=/ctx \
     /ctx/build/00-image-info.sh
 
 # Set dnf options before build scripts (persists across subsequent RUN layers)
-RUN dnf5 config-manager setopt keepcache=1 install_weak_deps=0
+# Break the ostree hardlink first: base images ship /etc/dnf/dnf.conf as a
+# hardlink into the object store. Writing to it in-place under buildah/btrfs
+# corrupts the file (NUL bytes appended). Copy → mv breaks the link safely.
+RUN cp /etc/dnf/dnf.conf /etc/dnf/dnf.conf.tmp && \
+    mv /etc/dnf/dnf.conf.tmp /etc/dnf/dnf.conf && \
+    dnf5 config-manager setopt keepcache=1 install_weak_deps=0
 
 RUN --mount=type=bind,from=ctx,source=/,target=/ctx \
     --mount=type=cache,dst=/var/cache/libdnf5 \

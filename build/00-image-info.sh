@@ -9,17 +9,45 @@ set -euo pipefail
 # This script is bluefin-pattern: each consumer provides its own branding.
 #
 # Required env vars (set as ARGs in Containerfile):
-#   IMAGE_NAME          - Image name (e.g. journeyfin, my-custom-os)
+#   IMAGE_NAME          - Image name (e.g. journeyfin, journeyfin-aira)
 #   IMAGE_VENDOR        - Image vendor/owner (e.g. github username or org)
 #   UBLUE_IMAGE_TAG     - Image tag/stream (e.g. stable, testing, latest)
-#   BASE_IMAGE_NAME     - Base image name (e.g. silverblue)
-#   FEDORA_MAJOR_VERSION - Fedora version (e.g. 42)
+#   BASE_IMAGE_NAME     - Base image name (e.g. silverblue, bazzite)
+#   FEDORA_MAJOR_VERSION - Fedora version (e.g. 42, 44)
 #   VERSION             - Full version string (e.g. stable-42.20250531)
 #   SHA_HEAD_SHORT      - Short git SHA (optional, for dev builds)
 ###############################################################################
 
+# Read IMAGE_NAME from /etc/environment if not set
+if [[ -z "${IMAGE_NAME:-}" ]]; then
+    if [[ -f /etc/environment ]]; then
+        # shellcheck disable=SC1091
+        . /etc/environment
+    fi
+fi
+
+# Set defaults based on variant if not provided
+IMAGE_VARIANT="${IMAGE_VARIANT:-edward}"
+
 # Branding — customize these for your image
-IMAGE_PRETTY_NAME="${IMAGE_PRETTY_NAME:-My Custom OS}"
+if [[ "${IMAGE_VARIANT}" == "aira" ]]; then
+    IMAGE_PRETTY_NAME="${IMAGE_PRETTY_NAME:-Journeyfin Aira}"
+    IMAGE_NAME="${IMAGE_NAME:-journeyfin-aira}"
+    BASE_IMAGE_NAME="${BASE_IMAGE_NAME:-bazzite}"
+elif [[ "${IMAGE_VARIANT}" == "server" ]]; then
+    IMAGE_PRETTY_NAME="${IMAGE_PRETTY_NAME:-Journeyfin Server}"
+    IMAGE_NAME="${IMAGE_NAME:-journeyfin-server}"
+    BASE_IMAGE_NAME="${BASE_IMAGE_NAME:-ucore}"
+elif [[ "${IMAGE_VARIANT}" == "crmy" ]]; then
+    IMAGE_PRETTY_NAME="${IMAGE_PRETTY_NAME:-Journeyfin CRM}"
+    IMAGE_NAME="${IMAGE_NAME:-journeyfin-crmy}"
+    BASE_IMAGE_NAME="${BASE_IMAGE_NAME:-fedora-bootc}"
+else
+    IMAGE_PRETTY_NAME="${IMAGE_PRETTY_NAME:-Journeyfin}"
+    IMAGE_NAME="${IMAGE_NAME:-journeyfin}"
+    BASE_IMAGE_NAME="${BASE_IMAGE_NAME:-silverblue}"
+fi
+
 IMAGE_LIKE="${IMAGE_LIKE:-fedora}"
 HOME_URL="${HOME_URL:-https://github.com/${IMAGE_VENDOR}/${IMAGE_NAME}}"
 DOCUMENTATION_URL="${DOCUMENTATION_URL:-https://github.com/${IMAGE_VENDOR}/${IMAGE_NAME}/blob/main/README.md}"
