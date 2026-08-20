@@ -1,0 +1,33 @@
+---
+name: Build Server Image (cargoyard-server)
+
+# Independent update cadence for the minimal server image (uCore base).
+# Reuses the shared build core in build-image.yml via workflow_call.
+# This is what publishes ghcr.io/<owner>/cargoyard-server:stable(-testing).
+
+on:
+  push:
+    branches:
+      - main
+      - stable
+    paths-ignore:
+      - "**.md"
+      - ".github/workflows/*validate*.yml"
+  schedule:
+    # Weekly cadence: refresh the server base image tag every Wednesday at 04:00 UTC
+    - cron: "0 4 * * 3"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+  id-token: write
+  attestations: write
+
+jobs:
+  build:
+    uses: ./.github/workflows/build-image.yml
+    secrets: inherit
+    with:
+      image_name: cargoyard-server
+      containerfile: custom/container/Containerfile.server

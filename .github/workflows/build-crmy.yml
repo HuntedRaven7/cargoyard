@@ -1,0 +1,32 @@
+---
+name: Build CRMY Image (cargoyard-crmy)
+
+# Independent update cadence for the CRM server image (Fedora bootc base).
+# Reuses the shared build core in build-image.yml via workflow_call.
+
+on:
+  push:
+    branches:
+      - main
+      - stable
+    paths-ignore:
+      - "**.md"
+      - ".github/workflows/*validate*.yml"
+  schedule:
+    # Weekly cadence: refresh the CRM base image tag every Thursday at 04:00 UTC
+    - cron: "0 4 * * 4"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+  id-token: write
+  attestations: write
+
+jobs:
+  build:
+    uses: ./.github/workflows/build-image.yml
+    secrets: inherit
+    with:
+      image_name: cargoyard-crmy
+      containerfile: custom/container/Containerfile.crmy

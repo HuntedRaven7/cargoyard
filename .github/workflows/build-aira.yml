@@ -1,0 +1,32 @@
+---
+name: Build Aira Image (cargoyard-aira)
+
+# Independent update cadence for the KDE desktop image.
+# Reuses the shared build core in build-image.yml via workflow_call.
+
+on:
+  push:
+    branches:
+      - main
+      - stable
+    paths-ignore:
+      - "**.md"
+      - ".github/workflows/*validate*.yml"
+  schedule:
+    # Weekly cadence: refresh the KDE base image tag every Tuesday at 04:00 UTC
+    - cron: "0 4 * * 2"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+  id-token: write
+  attestations: write
+
+jobs:
+  build:
+    uses: ./.github/workflows/build-image.yml
+    secrets: inherit
+    with:
+      image_name: cargoyard-aira
+      containerfile: custom/container/Containerfile.aira
