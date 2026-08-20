@@ -23,9 +23,7 @@ on:
         description: Path to the per-variant Containerfile
         required: true
         type: string
-    secrets:
-      inherit: true
-  workflow_dispatch:
+    workflow_dispatch:
 
 permissions:
   contents: read
