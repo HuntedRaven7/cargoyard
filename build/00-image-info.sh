@@ -9,7 +9,7 @@ set -euo pipefail
 # This script is bluefin-pattern: each consumer provides its own branding.
 #
 # Required env vars (set as ARGs in Containerfile):
-#   IMAGE_NAME          - Image name (e.g. journeyfin, journeyfin-aira)
+#   IMAGE_NAME          - Image name (e.g. cargoyard, cargoyard-aira)
 #   IMAGE_VENDOR        - Image vendor/owner (e.g. github username or org)
 #   UBLUE_IMAGE_TAG     - Image tag/stream (e.g. stable, testing, latest)
 #   BASE_IMAGE_NAME     - Base image name (e.g. silverblue, bazzite)
@@ -32,19 +32,19 @@ IMAGE_VARIANT="${IMAGE_VARIANT:-edward}"
 # Branding — customize these for your image
 if [[ "${IMAGE_VARIANT}" == "aira" ]]; then
     IMAGE_PRETTY_NAME="${IMAGE_PRETTY_NAME:-Journeyfin Aira}"
-    IMAGE_NAME="${IMAGE_NAME:-journeyfin-aira}"
+    IMAGE_NAME="${IMAGE_NAME:-cargoyard-aira}"
     BASE_IMAGE_NAME="${BASE_IMAGE_NAME:-bazzite}"
 elif [[ "${IMAGE_VARIANT}" == "server" ]]; then
     IMAGE_PRETTY_NAME="${IMAGE_PRETTY_NAME:-Journeyfin Server}"
-    IMAGE_NAME="${IMAGE_NAME:-journeyfin-server}"
+    IMAGE_NAME="${IMAGE_NAME:-cargoyard-server}"
     BASE_IMAGE_NAME="${BASE_IMAGE_NAME:-ucore}"
 elif [[ "${IMAGE_VARIANT}" == "crmy" ]]; then
     IMAGE_PRETTY_NAME="${IMAGE_PRETTY_NAME:-Journeyfin CRM}"
-    IMAGE_NAME="${IMAGE_NAME:-journeyfin-crmy}"
+    IMAGE_NAME="${IMAGE_NAME:-cargoyard-crmy}"
     BASE_IMAGE_NAME="${BASE_IMAGE_NAME:-fedora-bootc}"
 else
     IMAGE_PRETTY_NAME="${IMAGE_PRETTY_NAME:-Journeyfin}"
-    IMAGE_NAME="${IMAGE_NAME:-journeyfin}"
+    IMAGE_NAME="${IMAGE_NAME:-cargoyard}"
     BASE_IMAGE_NAME="${BASE_IMAGE_NAME:-silverblue}"
 fi
 

@@ -1,4 +1,4 @@
-# Default Brewfile for journeyfin
+# Default Brewfile for cargoyard
 # Users install via: ujust install-default-apps
 
 tap "ublue-os/tap", trusted: true

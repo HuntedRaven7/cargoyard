@@ -2,7 +2,7 @@
 # AI SANDBOX CONTAINER
 ###############################################################################
 # This Containerfile builds the AI sandbox container that runs as a quadlet
-# container alongside the Edward (journeyfin) bootc image.
+# container alongside the Edward (cargoyard) bootc image.
 #
 # Base: NVIDIA CUDA 12.5.1 (Ubuntu 24.04)
 # Purpose: AI workloads, coding assistants, LLM inference

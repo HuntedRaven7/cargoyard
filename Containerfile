@@ -10,13 +10,13 @@
 #   - "crmy": CRM server (Fedora bootc)
 #
 # Usage:
-#   podman build --build-arg IMAGE_VARIANT=aira -t journeyfin-aira:stable .
-#   podman build --build-arg IMAGE_VARIANT=edward -t journeyfin:stable .
-#   podman build --build-arg IMAGE_VARIANT=server -t journeyfin-server:stable .
-#   podman build --build-arg IMAGE_VARIANT=crmy -t journeyfin-crmy:stable .
+#   podman build --build-arg IMAGE_VARIANT=aira -t cargoyard-aira:stable .
+#   podman build --build-arg IMAGE_VARIANT=edward -t cargoyard:stable .
+#   podman build --build-arg IMAGE_VARIANT=server -t cargoyard-server:stable .
+#   podman build --build-arg IMAGE_VARIANT=crmy -t cargoyard-crmy:stable .
 #
 # The project name is defined by IMAGE_NAME which is automatically set based
-# on the IMAGE_VARIANT (journeyfin, journeyfin-aira, journeyfin-server, or journeyfin-crmy).
+# on the IMAGE_VARIANT (cargoyard, cargoyard-aira, cargoyard-server, or cargoyard-crmy).
 ###############################################################################
 
 ###############################################################################
@@ -46,6 +46,7 @@
 ARG IMAGE_VARIANT="edward"
 
 # Validate variant - this ensures only supported variants are built
+# hadolint ignore=DL3061,SC3010,SC3014
 RUN <<VALIDATE
 #!/bin/bash
 set -euo pipefail
@@ -121,17 +122,18 @@ ARG VERSION=""
 
 # Set IMAGE_NAME based on variant
 ARG IMAGE_NAME_DEFAULT
+# hadolint ignore=SC3010,SC3014
 RUN <<SET_NAME
 #!/bin/bash
 set -euo pipefail
 if [[ "${IMAGE_VARIANT}" == "aira" ]]; then
-    IMAGE_NAME="journeyfin-aira"
+    IMAGE_NAME="cargoyard-aira"
 elif [[ "${IMAGE_VARIANT}" == "server" ]]; then
-    IMAGE_NAME="journeyfin-server"
+    IMAGE_NAME="cargoyard-server"
 elif [[ "${IMAGE_VARIANT}" == "crmy" ]]; then
-    IMAGE_NAME="journeyfin-crmy"
+    IMAGE_NAME="cargoyard-crmy"
 else
-    IMAGE_NAME="journeyfin"
+    IMAGE_NAME="cargoyard"
 fi
 echo "IMAGE_NAME=${IMAGE_NAME}"
 # Write to /etc/environment for build scripts
