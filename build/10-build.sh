@@ -92,6 +92,7 @@ elif [[ "${IMAGE_VARIANT}" == "server" ]]; then
         openssh-server
         git
         htop
+        podman
     )
     dnf5 install -y --skip-unavailable \
         --setopt=install_weak_deps=False \
@@ -131,6 +132,9 @@ elif [[ "${IMAGE_VARIANT}" == "server" ]]; then
     # Server-specific services
     systemctl enable cockpit.service
     systemctl enable sshd.service
+    # Enable quadlet auto-start (linger + podman-restart) for server users
+    chmod +x /usr/share/ublue-os/server/enable-quadlet-autostart.sh
+    systemctl enable cargoyard-quadlet-autostart.service
 elif [[ "${IMAGE_VARIANT}" == "crmy" ]]; then
     # CRMY-specific services
     systemctl enable cockpit.socket
