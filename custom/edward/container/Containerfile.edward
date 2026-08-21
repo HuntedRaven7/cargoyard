@@ -44,14 +44,16 @@ ARG IMAGE_VENDOR="huntedraven7"
 ARG UBLUE_IMAGE_TAG="stable"
 ARG VERSION=""
 ARG IMAGE_NAME="edward"
+ARG SDDM_USER="edward"
 
 # hadolint ignore=SC3040
 RUN <<SET_NAME
 #!/bin/bash
 set -euo pipefail
-echo "IMAGE_NAME=${IMAGE_NAME}"
+echo "IMAGE_NAME=${IMAGE_NAME} SDDM_USER=${SDDM_USER}"
 # Write to /etc/environment for build scripts
 echo "IMAGE_NAME=${IMAGE_NAME}" >> /etc/environment
+echo "SDDM_USER=${SDDM_USER}" >> /etc/environment
 SET_NAME
 
 ARG BASE_IMAGE_NAME_DEFAULT
