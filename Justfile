@@ -352,9 +352,35 @@ build-qcow2 $target_image=("localhost/" + IMAGE_NAME) $tag=DEFAULT_TAG: && (_bui
 [group('Build Virtual Machine Image')]
 build-raw $target_image=("localhost/" + IMAGE_NAME) $tag=DEFAULT_TAG: && (_build-bib target_image tag "raw" "iso/disk.toml")
 
-# Build an ISO virtual machine image
+# Usage:
+#   just build-iso                              # ISO from the locally-built image
+#   just build-iso ghcr.io/owner/image:tag      # ISO from an existing image
+#
+# With a reference, `_build-bib` pulls that already-published image into rootful
+# podman (no local `just build` required) and hands it to bootc-image-builder.
+# Build an ISO virtual machine image, optionally from a registry image reference.
 [group('Build Virtual Machine Image')]
-build-iso $target_image=("localhost/" + IMAGE_NAME) $tag=DEFAULT_TAG: && (_build-bib target_image tag "iso" "iso/iso.toml")
+build-iso $image_ref="":
+    #!/usr/bin/env bash
+    set -euo pipefail
+
+    if [[ -n "${image_ref}" ]]; then
+        # Split registry/owner/image[:tag] into image and tag. The tag is the
+        # component after the last ':' that follows the final '/', so registry
+        # ports (e.g. localhost:5000/img) are preserved.
+        basename="${image_ref##*/}"
+        if [[ "${basename}" == *:* ]]; then
+            tag="${image_ref##*:}"
+            image="${image_ref%:*}"
+        else
+            tag="${DEFAULT_TAG}"
+            image="${image_ref}"
+        fi
+        just _build-bib "${image}" "${tag}" "iso" "iso/iso.toml"
+    else
+        # No reference: build the ISO from the locally-built image.
+        just _build-bib "localhost/${IMAGE_NAME}" "${DEFAULT_TAG}" "iso" "iso/iso.toml"
+    fi
 
 # Rebuild a QCOW2 virtual machine image
 [group('Build Virtual Machine Image')]
