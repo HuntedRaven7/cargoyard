@@ -119,7 +119,7 @@ just run-vm-iso
 | -------------------------- | ---------------------------------------------------------------- |
 | Added system package       | `just build` + `bootc container lint`                            |
 | Changed ujust command      | `just --list`                                                    |
-| Changed Brewfile           | `brew bundle check --file custom/brew/default.Brewfile`          |
+| Changed Brewfile           | `brew bundle check --file custom/edward/brew/default.Brewfile`          |
 | Changed Flatpak preinstall | Verify app ID on Flathub                                         |
 | Major base image change    | Full loop: `just build && just build-qcow2 && just run-vm-qcow2` |
 

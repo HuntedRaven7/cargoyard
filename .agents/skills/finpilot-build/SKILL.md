@@ -49,32 +49,47 @@ release, update both the `FEDORA_MAJOR_VERSION` ARG and the base image tag.
 
 ## Build Script Conventions
 
-### Single-image layout
+### Multi-variant layout
 
-This repo builds exactly one image (`containerino`, Arch base). Build scripts
-live directly in `build/` — there are no variant subdirectories:
+This repo builds five images: `edward` (main, Arch base) plus the friends
+`aira`, `crmy`, `server` (bootc) and `ai` (app container). Build scripts and
+custom assets are centralized per variant at the repo root:
 
 ```
 build/
-├── 00-image-info.sh      # image-info.json + os-release branding
-├── 10-build.sh           # brew overlay, custom files, pacman install, services
-├── clean-stage.sh        # cleanup, always runs last
-└── *.sh.example          # dnf5-based templates from the old multi-variant days
+├── edward/                  # pacman (Arch base)
+│   ├── 00-image-info.sh     # image-info.json + os-release branding
+│   ├── 10-build.sh          # brew overlay, custom files, pacman install, services
+│   ├── clean-stage.sh       # cleanup, always runs last
+│   └── *.sh.example         # dnf5-based templates from the old multi-variant days
+├── aira/                    # dnf5 (Bazzite base), incl. copr-helpers.sh
+├── crmy/                    # dnf5 (fedora-bootc base)
+└── server/                  # dnf5 (uCore base)
+
+custom/
+├── edward/                  # brew/, flatpaks/, ujust/, system_files/, container/
+│   └── container/Containerfile.edward   # main image Containerfile
+├── aira/  ├── crmy/  └── server/
+
+friends/
+├── <variant>/Containerfile  # context is the REPO ROOT:
+│                            #   COPY build/<variant> /build
+│                            #   COPY custom/<variant> /custom
+│                            #   COPY friends/<variant>/system_files /system_files
+├── <variant>/system_files/  # variant quadlets/desktop entries (aira/server/ai)
+└── ai/                      # app container: no build/ or custom/ dirs
 ```
 
-- **Package manager is pacman**: `pacman -Syu --noconfirm --needed ...`.
-  Never call dnf5 here; the Arch base does not have it.
-- The Containerfile chain runs `/ctx/build/00-image-info.sh` →
-  `/ctx/build/10-build.sh` → `/ctx/build/clean-stage.sh`, all at `build/` root.
-- System files live flat in `custom/system_files/`. The AI sandbox container
-  also lives outside the repo, in `~/FRIENDS/ai/` with the other siblings.
-- No `FEDORA_MAJOR_VERSION` ARG exists; `00-image-info.sh` omits the JSON
+- **edward's package manager is pacman**: `pacman -Syu --noconfirm --needed ...`.
+  Never call dnf5 there; the Arch base does not have it. Friends use dnf5.
+- Each bootc Containerfile chain runs `/ctx/build/00-image-info.sh` →
+  `/ctx/build/10-build.sh` → `/ctx/build/clean-stage.sh` from its variant dir.
+- No `FEDORA_MAJOR_VERSION` ARG in edward; `00-image-info.sh` omits the JSON
   field and the Justfile build recipe falls back to date-only version strings.
-- The former sibling images (aira/crmy/server) were extracted to
-  `~/FRIENDS/<variant>/` as standalone build contexts; they are NOT part of
-  this repo or its CI anymore.
-- `copr-helpers.sh` was removed (COPR is dnf5-only). The `.example` scripts
-  reference it only as archived templates.
+- Friends are built by the matrix in `.github/workflows/build-friends.yml`
+  (`finpilot-ci`). `ai` is built with plain podman, not `just build`.
+- `copr-helpers.sh` exists only under `build/{aira,crmy,server}/` (COPR is
+  dnf5-only). The `.example` scripts reference it only as archived templates.
 
 ### Numbering
 

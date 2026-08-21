@@ -1,4 +1,4 @@
-# Copilot Instructions for containerino bootc Image
+# Copilot Instructions for edward bootc Image
 
 ## Start here
 
@@ -139,5 +139,5 @@ Before marking work done:
 - [ ] Included that learning in this PR?
 
 **Last Updated**: 2026-08-05
-**Template Version**: containerino (Agent UX Overhaul)
+**Template Version**: edward (Friends Matrix)
 **Maintainer**: Universal Blue Community

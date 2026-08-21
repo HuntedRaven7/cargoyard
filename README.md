@@ -1,4 +1,4 @@
-# containerino
+# edward
 
 A custom bootc operating system image based on the lessons from [Universal Blue](https://universal-blue.org/) and [Bluefin](https://projectbluefin.io).
 
@@ -128,9 +128,9 @@ Click "Use this template" to create a new repository from this template.
 
 ### 2. Rename the Project
 
-Important: The repository name (`containerino`) is referenced in these 7 files — keep them in sync if you ever rename again:
+Important: The image name (`edward`) is referenced in these 7 files — keep them in sync if you ever rename again:
 
-1. `custom/container/Containerfile.containerino` (`ARG IMAGE_NAME`): `# Name: your-repo-name`
+1. `custom/edward/container/Containerfile.edward` (`ARG IMAGE_NAME`): your-repo-name
 2. `Justfile` (`export IMAGE_NAME := env("IMAGE_NAME", ...)`): `your-repo-name`
 3. `README.md` (title): `# your-repo-name`
 4. `artifacthub-repo.yml` (`repositoryID`): `repositoryID: your-repo-name`

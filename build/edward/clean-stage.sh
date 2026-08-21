@@ -1,0 +1,57 @@
+#!/usr/bin/env bash
+
+echo "::group:: ===$(basename "$0")==="
+
+set -eoux pipefail
+
+# CLEAN_ROOT: filesystem prefix applied to all paths.
+# Defaults to "/" so the variable is never empty (satisfies SC2115).
+# Set to a temp directory during unit tests.
+CLEAN_ROOT="${CLEAN_ROOT:-/}"
+
+rm -rf "${CLEAN_ROOT}/.gitkeep"
+# Use -mindepth/-maxdepth instead of shell globs so these are no-ops when the
+# directories are empty (e.g. /var/cache/pacman only exists as a transient
+# buildah cache mount and is not present in this layer).
+#
+# /var: the arch-bootc base ships an EMPTY /var (no /var/log at all). Keep
+# var/cache (pacman pkg cache exemption below) and var/lib (the pacman
+# database lives in /var/lib/pacman and must ship in the image or `pacman
+# -Syu` breaks on the installed system); wipe the rest, then recreate the
+# standard runtime dirs so bootc lint's var-log check finds an empty
+# directory instead of a missing path.
+find "${CLEAN_ROOT}/var" -mindepth 1 -maxdepth 1 -type d \! -name cache \! -name lib -exec rm -fr {} \;
+find "${CLEAN_ROOT}/var/cache" -mindepth 1 -maxdepth 1 -type d \! -name pacman -exec rm -fr {} \;
+mkdir -p "${CLEAN_ROOT}/var/log" "${CLEAN_ROOT}/var/tmp"
+
+# Clear tmpfs-backed runtime directories without deleting the directories
+# themselves. Buildah may have bind mounts in these paths during RUN, so
+# replacing the mountpoint can fail with EBUSY.
+for runtime_dir in tmp boot; do
+	mkdir -p "${CLEAN_ROOT:?}/${runtime_dir}"
+	find "${CLEAN_ROOT:?}/${runtime_dir}" -mindepth 1 -maxdepth 1 -print0 |
+		while IFS= read -r -d '' entry; do
+			if mountpoint -q "${entry}" 2>/dev/null; then
+				continue
+			fi
+			rm -rf "${entry}"
+		done
+done
+
+# /run can contain nested bind mounts created by the build container. Walk it
+# depth-first so we can remove image-owned files while leaving mounted files
+# and any directories that still contain them alone.
+mkdir -p "${CLEAN_ROOT:?}/run"
+find "${CLEAN_ROOT:?}/run" -mindepth 1 -depth -print0 |
+	while IFS= read -r -d '' entry; do
+		if mountpoint -q "${entry}" 2>/dev/null; then
+			continue
+		fi
+		if [[ -d "${entry}" ]]; then
+			rmdir "${entry}" 2>/dev/null || true
+			continue
+		fi
+		rm -f "${entry}"
+	done
+
+echo "::endgroup::"

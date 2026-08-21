@@ -10,8 +10,8 @@ description: >-
 
 ## When to Use
 
-- Adding or editing Homebrew Brewfiles (`custom/brew/*.Brewfile`)
-- Adding or editing Flatpak preinstall files (`custom/flatpaks/*.preinstall`)
+- Adding or editing Homebrew Brewfiles (`custom/edward/brew/*.Brewfile`)
+- Adding or editing Flatpak preinstall files (`custom/edward/flatpaks/*.preinstall`)
 - Adding or editing ujust command files (`custom/ujust/*.just`)
 - Explaining the runtime vs build-time distinction to contributors
 - Debugging why a Brewfile or Flatpak didn't install as expected
@@ -29,7 +29,7 @@ description: >-
 3. **Apply correct syntax** for each file type
 4. **Validate locally** before opening a PR
 
-## Brewfiles: `custom/brew/*.Brewfile`
+## Brewfiles: `custom/edward/brew/*.Brewfile`
 
 Brewfiles use Ruby syntax. They define Homebrew packages installed by users after deployment. Homebrew itself is pre-staged at build time via the `@ublue-os/brew` OCI container and extracted on first boot by `brew-setup.service`; Brewfiles define what users install after that extraction.
 
@@ -37,9 +37,9 @@ Brewfiles use Ruby syntax. They define Homebrew packages installed by users afte
 
 | File                               | Purpose                                 |
 | ---------------------------------- | --------------------------------------- |
-| `custom/brew/default.Brewfile`     | General purpose CLI tools               |
-| `custom/brew/development.Brewfile` | Development tools and environments      |
-| `custom/brew/fonts.Brewfile`       | Font packages                           |
+| `custom/edward/brew/default.Brewfile`     | General purpose CLI tools               |
+| `custom/edward/brew/development.Brewfile` | Development tools and environments      |
+| `custom/edward/brew/fonts.Brewfile`       | Font packages                           |
 | Custom `*.Brewfile`                | Create as needed for specific use cases |
 
 ### Syntax
@@ -76,11 +76,11 @@ ujust install-fonts
 
 ### Validation
 
-- **PR trigger**: `validate-brewfiles.yml` runs on PRs that touch `custom/brew/**`
+- **PR trigger**: `validate-brewfiles.yml` runs on PRs that touch `custom/edward/brew/**`
 - **Local check**: `brew bundle check --file /path/to/Brewfile`
 - **List what would install**: `brew bundle list --file /path/to/Brewfile`
 
-## Flatpaks: `custom/flatpaks/*.preinstall`
+## Flatpaks: `custom/edward/flatpaks/*.preinstall`
 
 Flatpak preinstall files use INI format. They define GUI apps installed after first boot.
 
@@ -88,7 +88,7 @@ Flatpak preinstall files use INI format. They define GUI apps installed after fi
 
 | File                                 | Purpose                                |
 | ------------------------------------ | -------------------------------------- |
-| `custom/flatpaks/default.preinstall` | Default GUI applications               |
+| `custom/edward/flatpaks/default.preinstall` | Default GUI applications               |
 | Custom `*.preinstall`                | Create as needed for specific app sets |
 
 ### Syntax

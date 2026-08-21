@@ -34,10 +34,10 @@ description: >-
 | Add a system package (dnf5)    | `dnf5 install -y pkg`                         | `build/10-build.sh`                  |
 | Add a COPR package             | `copr_install_isolated "owner/repo" pkg`      | `build/10-build.sh` (or `20-*.sh`)   |
 | Add a third-party repo package | Enable repo → `dnf5 install -y` → remove repo | `build/20-*.sh` (see examples)       |
-| Add a CLI tool (runtime)       | `brew "pkg"`                                  | `custom/brew/default.Brewfile`       |
-| Add a dev environment tool     | `brew "pkg"`                                  | `custom/brew/development.Brewfile`   |
-| Add a font                     | `brew "font-xyz"`                             | `custom/brew/fonts.Brewfile`         |
-| Add a GUI app                  | `[Flatpak Preinstall org.app.id]`             | `custom/flatpaks/default.preinstall` |
+| Add a CLI tool (runtime)       | `brew "pkg"`                                  | `custom/edward/brew/default.Brewfile`       |
+| Add a dev environment tool     | `brew "pkg"`                                  | `custom/edward/brew/development.Brewfile`   |
+| Add a font                     | `brew "font-xyz"`                             | `custom/edward/brew/fonts.Brewfile`         |
+| Add a GUI app                  | `[Flatpak Preinstall org.app.id]`             | `custom/edward/flatpaks/default.preinstall` |
 | Add a user command             | Create shortcut (NO dnf5)                     | `custom/ujust/*.just`                |
 | Enable a systemd service       | `systemctl enable service.name`               | `build/10-build.sh`                  |
 | Replace desktop environment    | Remove old → install new → set default        | `build/30-*.sh` (see examples)       |
@@ -103,13 +103,13 @@ For Google Chrome, 1Password, VS Code, etc. Follow the example scripts.
 
 See `build/20-onepassword.sh.example` for a complete working example.
 
-## Runtime Brew: `custom/brew/*.Brewfile`
+## Runtime Brew: `custom/edward/brew/*.Brewfile`
 
 Homebrew is for CLI tools and development environments, installed by users
 after first boot. File locations, syntax, and validation:
 `finpilot-custom`.
 
-## Runtime Flatpak: `custom/flatpaks/*.preinstall`
+## Runtime Flatpak: `custom/edward/flatpaks/*.preinstall`
 
 Flatpaks are for GUI apps, installed post-first-boot (not in the ISO or
 container). INI syntax, `Branch=stable`, Flathub ID lookup, and validation:

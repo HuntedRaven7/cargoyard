@@ -1,4 +1,4 @@
-export IMAGE_NAME := env("IMAGE_NAME", "containerino")
+export IMAGE_NAME := env("IMAGE_NAME", "edward")
 export DEFAULT_TAG := env("DEFAULT_TAG", "stable")
 export PODMAN := env("PODMAN", "podman")
 export REPO_ORG := env("GITHUB_REPOSITORY_OWNER", "huntedraven7")
@@ -89,7 +89,7 @@ sudoif command *args:
 #
 
 # Build the image using the specified parameters
-build $target_image=IMAGE_NAME $tag=DEFAULT_TAG $containerfile="custom/container/Containerfile.containerino":
+build $target_image=IMAGE_NAME $tag=DEFAULT_TAG $containerfile="custom/edward/container/Containerfile.edward":
     #!/usr/bin/env bash
 
     # Read the base version from the per-variant Containerfile (single source
@@ -184,12 +184,12 @@ build $target_image=IMAGE_NAME $tag=DEFAULT_TAG $containerfile="custom/container
         --tag "${target_image}:${tag}" \
         .
 
-# Build the containerino image (Arch bootc base, Hyprland + Quickshell)
+# Build the edward image (Arch bootc base, Hyprland + Quickshell)
 [group('Image')]
-build-containerino $tag=DEFAULT_TAG:
+build-edward $tag=DEFAULT_TAG:
     #!/usr/bin/env bash
     set -euo pipefail
-    IMAGE_NAME="containerino" just build "containerino" "${tag}" "custom/container/Containerfile.containerino"
+    IMAGE_NAME="edward" just build "edward" "${tag}" "custom/edward/container/Containerfile.edward"
 
 # Split the image for smaller updates (New)!
 # Rechunks the existing image with chunkah for better resumability.

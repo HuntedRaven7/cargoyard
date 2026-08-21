@@ -33,14 +33,15 @@ description: >-
 
 | File                          | Trigger                           | Purpose                                                       |
 | ----------------------------- | --------------------------------- | ------------------------------------------------------------- |
-| `build-image.yml`             | push main + stable, manual        | Publish `:stable-testing` (main) or `:stable` (stable)        |
+| `build-image.yml`             | push main + stable, manual        | Publish `edward` `:stable-testing` (main) or `:stable` (stable) |
+| `build-friends.yml`            | push main + stable, manual        | Matrix build of friends/: aira, crmy, server (bootc via just) + ai (plain podman) |
 | `promote-main-to-stable.yml`  | push main, manual                 | Squash promotion PR `main` → `stable` via factory reusable    |
 | `sync-stable-to-main.yml`     | push stable                       | Merge direct `stable` hotfixes back to `main` (usually no-op) |
 | `pr-validation.yml`           | PR → main                         | shellcheck + hadolint + pre-commit via `validate-pr`          |
 | `renovate.yml`                | schedule 6h, push renovate config | Self-hosted Renovate runner                                   |
 | `clean.yml`                   | schedule weekly                   | Delete GHCR images older than 90 days                         |
-| `validate-brewfiles.yml`      | PR paths: `custom/brew/**`        | Homebrew Brewfile syntax check                                |
-| `validate-flatpaks.yml`       | PR paths: `custom/flatpaks/**`    | Flathub app ID existence check                                |
+| `validate-brewfiles.yml`      | PR paths: `custom/*/brew/**`        | Homebrew Brewfile syntax check                                |
+| `validate-flatpaks.yml`       | PR paths: `custom/*/flatpaks/**`    | Flathub app ID existence check                                |
 | `validate-justfiles.yml`      | PR paths: `Justfile`              | `just --list` syntax check                                    |
 | `validate-renovate.yml`       | PR paths: `.github/renovate.json` | `renovate-config-validator`                                   |
 

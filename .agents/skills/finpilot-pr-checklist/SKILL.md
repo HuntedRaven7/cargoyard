@@ -109,8 +109,8 @@ just --list
 
 | Check                 | Command                                                 |
 | --------------------- | ------------------------------------------------------- |
-| Syntax validation     | `brew bundle check --file custom/brew/default.Brewfile` |
-| List packages         | `brew bundle list --file custom/brew/default.Brewfile`  |
+| Syntax validation     | `brew bundle check --file custom/edward/brew/default.Brewfile` |
+| List packages         | `brew bundle list --file custom/edward/brew/default.Brewfile`  |
 | Verify packages exist | `brew search <package-name>`                            |
 
 **CI triggers:** `validate-brewfiles.yml`
@@ -162,8 +162,8 @@ just --list
 | Workflow                 | Trigger Path                  | Required? |
 | ------------------------ | ----------------------------- | --------- |
 | `pr-validation.yml`      | All PRs                       | Yes       |
-| `validate-brewfiles.yml` | `custom/brew/**`              | Yes       |
-| `validate-flatpaks.yml`  | `custom/flatpaks/**`          | Yes       |
+| `validate-brewfiles.yml` | `custom/*/brew/**`              | Yes       |
+| `validate-flatpaks.yml`  | `custom/*/flatpaks/**`          | Yes       |
 | `validate-justfiles.yml` | `Justfile`, `custom/ujust/**` | Yes       |
 | `validate-renovate.yml`  | `renovate.json`               | Yes       |
 
