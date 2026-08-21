@@ -29,8 +29,8 @@ Containerfile's `FROM` lines; Renovate updates them.
 
 | Folder | Image          | Base                       | Package manager |
 | ------ | -------------- | -------------------------- | --------------- |
-| aira   | cargoyard-aira | ghcr.io/ublue-os/bazzite   | dnf5            |
-| crmy   | cargoyard-crmy | quay.io/fedora/fedora-bootc| dnf5            |
+| aira   | aira           | ghcr.io/ublue-os/bazzite   | dnf5            |
+| crmy   | crmy           | quay.io/fedora/fedora-bootc| dnf5            |
 
 ## Outside friends/
 
@@ -38,5 +38,5 @@ Two siblings live in their own top-level directories with their own workflows:
 
 | Folder  | Image            | Workflow                          | Kind                |
 | ------- | ---------------- | --------------------------------- | ------------------- |
-| server/ | cargoyard-server | `.github/workflows/build-server.yml` | bootc (uCore)    |
+| server/ | server           | `.github/workflows/build-server.yml` | bootc (uCore)    |
 | ai/     | ai               | `.github/workflows/build-ai.yml`     | app container (CUDA + Brew) |

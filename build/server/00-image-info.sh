@@ -8,7 +8,7 @@ set -euo pipefail
 # Generates /usr/share/ublue-os/image-info.json and customizes /usr/lib/os-release.
 #
 # Required env vars (set as ARGs in Containerfile):
-#   IMAGE_NAME           - Image name (cargoyard-server)
+#   IMAGE_NAME           - Image name (server)
 #   IMAGE_VENDOR         - Image vendor/owner (e.g. github username or org)
 #   UBLUE_IMAGE_TAG      - Image tag/stream (e.g. stable, testing)
 #   BASE_IMAGE_NAME      - Base image name (ucore)
@@ -25,7 +25,7 @@ fi
 
 # Branding — customize these for your image
 IMAGE_PRETTY_NAME="${IMAGE_PRETTY_NAME:-Journeyfin Server}"
-IMAGE_NAME="${IMAGE_NAME:-cargoyard-server}"
+IMAGE_NAME="${IMAGE_NAME:-server}"
 BASE_IMAGE_NAME="${BASE_IMAGE_NAME:-ucore}"
 IMAGE_LIKE="${IMAGE_LIKE:-fedora}"
 

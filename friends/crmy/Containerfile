@@ -4,7 +4,7 @@
 # CRM server image (Fedora bootc base).
 #
 # Usage:
-#   podman build -f friends/crmy/Containerfile -t cargoyard-crmy:stable .
+#   podman build -f friends/crmy/Containerfile -t crmy:stable .
 #
 # CRMY has no variant-specific system_files; it relies on the shared
 # build scripts in build/crmy/ and custom assets in custom/crmy/.
@@ -42,7 +42,7 @@ ARG IMAGE_VARIANT="crmy"
 ARG IMAGE_VENDOR="huntedraven7"
 ARG UBLUE_IMAGE_TAG="stable"
 ARG VERSION=""
-ARG IMAGE_NAME="cargoyard-crmy"
+ARG IMAGE_NAME="crmy"
 
 # hadolint ignore=SC3040
 RUN <<SET_NAME

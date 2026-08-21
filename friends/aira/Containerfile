@@ -4,7 +4,7 @@
 # KDE desktop image (Bazzite base).
 #
 # Usage:
-#   podman build -f friends/aira/Containerfile -t cargoyard-aira:stable .
+#   podman build -f friends/aira/Containerfile -t aira:stable .
 #
 # The project name is defined by IMAGE_NAME.
 ###############################################################################
@@ -42,7 +42,7 @@ ARG IMAGE_VARIANT="aira"
 ARG IMAGE_VENDOR="huntedraven7"
 ARG UBLUE_IMAGE_TAG="stable"
 ARG VERSION=""
-ARG IMAGE_NAME="cargoyard-aira"
+ARG IMAGE_NAME="aira"
 
 # hadolint ignore=SC3040
 RUN <<SET_NAME

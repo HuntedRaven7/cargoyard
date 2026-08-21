@@ -22,6 +22,10 @@ rm -rf "${CLEAN_ROOT}/.gitkeep"
 # directory instead of a missing path.
 find "${CLEAN_ROOT}/var" -mindepth 1 -maxdepth 1 -type d \! -name cache \! -name lib -exec rm -fr {} \;
 find "${CLEAN_ROOT}/var/cache" -mindepth 1 -maxdepth 1 -type d \! -name pacman -exec rm -fr {} \;
+# Recreate the standard runtime dirs so bootc lint's var-log check finds an
+# empty directory instead of a missing path. Remove first: they may exist as
+# symlinks (which -type d above skips and mkdir -p refuses to replace).
+rm -rf "${CLEAN_ROOT}/var/log" "${CLEAN_ROOT}/var/tmp"
 mkdir -p "${CLEAN_ROOT}/var/log" "${CLEAN_ROOT}/var/tmp"
 
 # Clear tmpfs-backed runtime directories without deleting the directories

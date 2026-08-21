@@ -8,7 +8,7 @@ set -euo pipefail
 # Generates /usr/share/ublue-os/image-info.json and customizes /usr/lib/os-release.
 #
 # Required env vars (set as ARGs in Containerfile):
-#   IMAGE_NAME           - Image name (cargoyard-aira)
+#   IMAGE_NAME           - Image name (aira)
 #   IMAGE_VENDOR         - Image vendor/owner (e.g. github username or org)
 #   UBLUE_IMAGE_TAG      - Image tag/stream (e.g. stable, testing)
 #   BASE_IMAGE_NAME      - Base image name (bazzite)
@@ -25,7 +25,7 @@ fi
 
 # Branding — customize these for your image
 IMAGE_PRETTY_NAME="${IMAGE_PRETTY_NAME:-Journeyfin Aira}"
-IMAGE_NAME="${IMAGE_NAME:-cargoyard-aira}"
+IMAGE_NAME="${IMAGE_NAME:-aira}"
 BASE_IMAGE_NAME="${BASE_IMAGE_NAME:-bazzite}"
 IMAGE_LIKE="${IMAGE_LIKE:-fedora}"
 

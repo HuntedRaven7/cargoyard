@@ -8,7 +8,7 @@ set -euo pipefail
 # Generates /usr/share/ublue-os/image-info.json and customizes /usr/lib/os-release.
 #
 # Required env vars (set as ARGs in Containerfile):
-#   IMAGE_NAME           - Image name (cargoyard-crmy)
+#   IMAGE_NAME           - Image name (crmy)
 #   IMAGE_VENDOR         - Image vendor/owner (e.g. github username or org)
 #   UBLUE_IMAGE_TAG      - Image tag/stream (e.g. stable, testing)
 #   BASE_IMAGE_NAME      - Base image name (fedora-bootc)
@@ -25,7 +25,7 @@ fi
 
 # Branding — customize these for your image
 IMAGE_PRETTY_NAME="${IMAGE_PRETTY_NAME:-Journeyfin CRM}"
-IMAGE_NAME="${IMAGE_NAME:-cargoyard-crmy}"
+IMAGE_NAME="${IMAGE_NAME:-crmy}"
 BASE_IMAGE_NAME="${BASE_IMAGE_NAME:-fedora-bootc}"
 IMAGE_LIKE="${IMAGE_LIKE:-fedora}"
 

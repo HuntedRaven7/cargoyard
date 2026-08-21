@@ -4,7 +4,7 @@
 # Minimal server image (uCore base).
 #
 # Usage:
-#   podman build -f server/Containerfile -t cargoyard-server:stable .
+#   podman build -f server/Containerfile -t server:stable .
 #
 # The project name is defined by IMAGE_NAME.
 ###############################################################################
@@ -42,7 +42,7 @@ ARG IMAGE_VARIANT="server"
 ARG IMAGE_VENDOR="huntedraven7"
 ARG UBLUE_IMAGE_TAG="stable"
 ARG VERSION=""
-ARG IMAGE_NAME="cargoyard-server"
+ARG IMAGE_NAME="server"
 
 # hadolint ignore=SC3040
 RUN <<SET_NAME
