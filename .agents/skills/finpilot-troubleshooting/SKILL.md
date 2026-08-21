@@ -69,7 +69,8 @@ description: >-
 | CI build fails: token health               | `RENOVATE_TOKEN` or `GITHUB_TOKEN` invalid/expired | Check token expiry, verify scopes, regenerate if needed                   |
 | CI build fails: signing misconfig          | Signing step uncommented but OIDC not configured   | Comment out signing step OR verify OIDC trust in repo settings            |
 | CI build fails: composite action not found | Wrong commit SHA or repo name in `uses:`           | Verify `projectbluefin/actions` SHA, check network access                 |
-| CI build succeeds but image not published  | Wrong `IMAGE_NAME` or `IMAGE_VENDOR`               | Check `Containerfile` ARGs, verify `clean.yml` package name matches       |
+| CI build succeeds but image not published  | Wrong `IMAGE_NAME` or `IMAGE_VENDOR`             | Check `Containerfile` ARGs, verify `clean.yml` package name matches       |
+| `promote-main-to-stable` fails: `git fetch origin ... stable` — "couldn't find remote ref stable" | `stable` branch was never created on the fork (onboarding §3 skipped) | Bootstrap per `.github/SETUP_CHECKLIST.md`: `git switch main && git switch -c stable && git push --set-upstream origin stable && git switch main` (seeds `stable` at the tested commit). The promote reusable then tree-compares and no-ops until `main` advances. |
 
 ## Runtime Issues
 
