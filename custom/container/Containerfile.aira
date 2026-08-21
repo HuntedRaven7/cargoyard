@@ -33,7 +33,7 @@ COPY --from=brew /system_files /oci/brew
 ###############################################################################
 # BASE IMAGE
 ###############################################################################
-FROM ghcr.io/ublue-os/bazzite:stable AS base
+FROM ghcr.io/ublue-os/bazzite:stable@sha256:5d88ae9a6454ab3c13edf7b722d96d0e1affc44b19386d47803f6417b56dc05c AS base
 
 ###############################################################################
 # VARIANT IMAGE

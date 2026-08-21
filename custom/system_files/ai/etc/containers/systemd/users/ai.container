@@ -4,7 +4,7 @@ Documentation=man:podman-systemd.unit(5)
 After=network-online.target
 
 [Container]
-Image=ghcr.io/huntedraven7/blueprint:ai
+Image=ghcr.io/huntedraven7/blueprint:ai@sha256:98620b1261b5ea54092e6fe9987aa5efd393c12413d49af0e193e2c820a69895
 ContainerName=ai
 HostName=ai-sandbox
 Exec=/usr/bin/sleep infinity
