@@ -10,7 +10,7 @@
 # The quadlet definition is in custom/system/etc/containers/systemd/users/ai.container
 ###############################################################################
 
-FROM docker.io/nvidia/cuda:12.5.1-runtime-ubuntu24.04
+FROM docker.io/nvidia/cuda:12.5.1-runtime-ubuntu24.04@sha256:447c60da64e4e18860b640289274ec0103816aa56d410041b162d48e85fb1058
 
 # Install system dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \

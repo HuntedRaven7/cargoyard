@@ -5,7 +5,7 @@ After=tailscale-ntfy.service
 Requires=tailscale-ntfy.service
 
 [Container]
-Image=docker.io/binwiederhier/ntfy:latest
+Image=docker.io/binwiederhier/ntfy:latest@sha256:f2419f405127afa868f10985c1a41449e673477cee1eb19994339a5ae8b592e7
 ContainerName=ntfy
 Exec=serve
 Network=container:tailscale-ntfy

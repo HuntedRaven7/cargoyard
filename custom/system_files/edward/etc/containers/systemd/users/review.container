@@ -4,7 +4,7 @@ Documentation=man:podman-systemd.unit(5)
 After=network-online.target
 
 [Container]
-Image=ghcr.io/projectbluefin/review:stable
+Image=ghcr.io/projectbluefin/review:stable@sha256:8eab48c90567dffb9b5ce05fa1194f2038661d2320056119a6c159e60d060580
 ContainerName=review
 HostName=review
 Exec=/usr/bin/sleep infinity
