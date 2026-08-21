@@ -12,17 +12,18 @@ set -euo pipefail
 # https://github.com/pop-os/cosmic-epoch
 #
 # To use this script:
-# 1. Rename to remove .example extension: mv 30-cosmic-desktop.sh.example 30-cosmic-desktop.sh
-# 2. Add an explicit RUN block for /ctx/build/30-cosmic-desktop.sh after
-#    10-build.sh in Containerfile. See build/README.md for the standard block.
+# 1. Move it into the target variant's build dir and rename to remove .example:
+#    mv build/30-cosmic-desktop.sh.example build/aira/30-cosmic-desktop.sh
+# 2. Add an explicit RUN block for /ctx/build/<variant>/30-cosmic-desktop.sh
+#    after 10-build.sh in that variant's Containerfile. See build/README.md.
 #
 # WARNING: This removes GNOME and replaces it with COSMIC. Only use this if
 # you want COSMIC as your desktop environment instead of GNOME.
 ###############################################################################
 
-# Source helper functions
+# Source helper functions from this variant's build directory
 # shellcheck source=/dev/null
-source /ctx/build/copr-helpers.sh
+source "/ctx/build/${IMAGE_VARIANT}/copr-helpers.sh"
 
 echo "::group:: Remove GNOME Desktop"
 

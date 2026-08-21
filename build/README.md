@@ -1,77 +1,65 @@
 # Build Scripts
 
-This directory contains build scripts used during image creation. The default Containerfile explicitly runs the required scripts; extra scripts must be explicitly added to the Containerfile.
+Build scripts for the single `containerino` image (Arch Linux bootc base).
+Scripts live directly in this directory; `.sh.example` files are archived
+templates from the old multi-variant setup.
 
-## How It Works
+## Layout
 
-Scripts are named with a number prefix (e.g., `10-build.sh`, `20-onepassword.sh`) and run in ascending order during the container build process.
+```
+build/
+├── 00-image-info.sh            # image-info.json + os-release branding
+├── 10-build.sh                 # brew overlay, custom files, pacman install, services
+├── clean-stage.sh              # cleanup, always runs last
+├── 20-onepassword.sh.example   # archived dnf5 templates (aira/crmy/server era)
+├── 30-cosmic-desktop.sh.example
+└── 40-nvidia.sh.example
+```
 
-## Included Scripts
+## Containerfile Chain
 
-- **`10-build.sh`** - Main build script for base system modifications, package installation, and service configuration
-
-## Example Scripts
-
-- **`20-onepassword.sh.example`** - Example showing how to install software from third-party RPM repositories (Google Chrome, 1Password)
-- **`30-cosmic-desktop.sh.example`** - Example showing how to replace the GNOME desktop with COSMIC desktop
-- **`40-nvidia.sh.example`** - Example showing how to add NVIDIA drivers and CDI container support
-
-To use an example script:
-1. Rename it to remove the `.example` extension (for example, `mv build/20-onepassword.sh.example build/20-onepassword.sh`).
-2. Add the standard `RUN` block below after the `10-build.sh` block in `Containerfile`, replacing `NN-example.sh` with the renamed script.
-3. Run `just build`.
+`custom/container/Containerfile.containerino` runs them explicitly:
 
 ```dockerfile
-RUN --mount=type=bind,from=ctx,source=/,target=/ctx \
-    --mount=type=cache,dst=/var/cache/libdnf5 \
-    --mount=type=cache,dst=/var/cache/rpm-ostree \
-    --mount=type=secret,id=GITHUB_TOKEN \
-    --mount=type=tmpfs,dst=/boot \
-    --mount=type=tmpfs,dst=/tmp \
-    /ctx/build/NN-example.sh
+RUN ... /ctx/build/00-image-info.sh
+RUN ... /ctx/build/10-build.sh
+RUN ... /ctx/build/clean-stage.sh
 ```
 
-## Creating Your Own Scripts
+## Package Manager
 
-Create numbered scripts for different purposes:
+The base is `ghcr.io/huntedraven7/arch-bootc`, so everything uses **pacman**:
 
 ```bash
-# 10-build.sh - Base system (already exists)
-# 20-drivers.sh - Hardware drivers
-# 30-development.sh - Development tools
-# 40-gaming.sh - Gaming software
-# 50-cleanup.sh - Final cleanup tasks
+pacman -Syu --noconfirm --needed package-name
 ```
 
-### Script Template
+Never call dnf5 here — the Arch base does not have it. `clean-stage.sh` has no
+dnf5 blocks; it exempts `/var/cache/pacman` instead of libdnf5.
+
+## Adding Scripts
+
+Add numbered scripts to this directory and an explicit RUN block to the
+Containerfile:
 
 ```bash
-#!/usr/bin/env bash
-set -oue pipefail
-
-echo "Running custom setup..."
-# Your commands here
+# 20-development.sh - dev tools
+# 30-gaming.sh      - gaming software
 ```
 
 ### Best Practices
 
-- **Use descriptive names**: `40-nvidia.sh` is better than `40-stuff.sh`
+- **Use descriptive names**: `30-gaming.sh` is better than `30-stuff.sh`
 - **One purpose per script**: Easier to debug and maintain
-- **Clean up after yourself**: Remove temporary files and disable temporary repos
+- **Clean up after yourself**: Remove temporary files
 - **Test incrementally**: Add one script at a time and test builds
-- **Comment your code**: Future you will thank present you
 
 ### Disabling Scripts
 
-To disable an activated script, remove its corresponding `RUN` block from `Containerfile` and rename it back to `.example` (or remove it).
-
-## Execution Order
-
-The template runs scripts explicitly, rather than automatically discovering files by prefix. Place extra script blocks after `10-build.sh` and before `clean-stage.sh`. Use numbered names to communicate the intended order.
+Remove the corresponding `RUN` block from the Containerfile and delete the script.
 
 ## Notes
 
 - Scripts run as root during build
 - Build context is available at `/ctx`
-- Use dnf5 for package management (not dnf or yum)
-- Always use `-y` flag for non-interactive installs
+- Always use a non-interactive flag (`--noconfirm`)

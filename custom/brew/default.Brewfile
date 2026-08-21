@@ -1,4 +1,4 @@
-# Default Brewfile for cargoyard
+# Default Brewfile for containerino
 # Users install via: ujust install-default-apps
 
 tap "ublue-os/tap", trusted: true

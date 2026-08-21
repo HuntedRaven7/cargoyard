@@ -1,54 +1,33 @@
-#!/usr/bin/bash
+#!/usr/bin/env bash
 
 set -euo pipefail
 
 ###############################################################################
-# Image Info Generation
+# Image Info Generation — containerino (Arch base)
 ###############################################################################
 # Generates /usr/share/ublue-os/image-info.json and customizes /usr/lib/os-release.
-# This script is bluefin-pattern: each consumer provides its own branding.
 #
 # Required env vars (set as ARGs in Containerfile):
-#   IMAGE_NAME          - Image name (e.g. cargoyard, cargoyard-aira)
-#   IMAGE_VENDOR        - Image vendor/owner (e.g. github username or org)
-#   UBLUE_IMAGE_TAG     - Image tag/stream (e.g. stable, testing, latest)
-#   BASE_IMAGE_NAME     - Base image name (e.g. silverblue, bazzite)
-#   FEDORA_MAJOR_VERSION - Fedora version (e.g. 42, 44)
-#   VERSION             - Full version string (e.g. stable-42.20250531)
-#   SHA_HEAD_SHORT      - Short git SHA (optional, for dev builds)
+#   IMAGE_NAME      - Image name (containerino)
+#   IMAGE_VENDOR    - Image vendor/owner (e.g. github username or org)
+#   UBLUE_IMAGE_TAG - Image tag/stream (e.g. stable, testing)
+#   BASE_IMAGE_NAME - Base image name (arch-bootc)
+#   VERSION         - Full version string (e.g. stable-20250531)
+#   SHA_HEAD_SHORT  - Short git SHA (optional, for dev builds)
 ###############################################################################
 
 # Read IMAGE_NAME from /etc/environment if not set
-if [[ -z "${IMAGE_NAME:-}" ]]; then
-    if [[ -f /etc/environment ]]; then
-        # shellcheck disable=SC1091
-        . /etc/environment
-    fi
+if [[ -z "${IMAGE_NAME:-}" ]] && [[ -f /etc/environment ]]; then
+    # shellcheck disable=SC1091
+    . /etc/environment
 fi
-
-# Set defaults based on variant if not provided
-IMAGE_VARIANT="${IMAGE_VARIANT:-edward}"
 
 # Branding — customize these for your image
-if [[ "${IMAGE_VARIANT}" == "aira" ]]; then
-    IMAGE_PRETTY_NAME="${IMAGE_PRETTY_NAME:-Journeyfin Aira}"
-    IMAGE_NAME="${IMAGE_NAME:-cargoyard-aira}"
-    BASE_IMAGE_NAME="${BASE_IMAGE_NAME:-bazzite}"
-elif [[ "${IMAGE_VARIANT}" == "server" ]]; then
-    IMAGE_PRETTY_NAME="${IMAGE_PRETTY_NAME:-Journeyfin Server}"
-    IMAGE_NAME="${IMAGE_NAME:-cargoyard-server}"
-    BASE_IMAGE_NAME="${BASE_IMAGE_NAME:-ucore}"
-elif [[ "${IMAGE_VARIANT}" == "crmy" ]]; then
-    IMAGE_PRETTY_NAME="${IMAGE_PRETTY_NAME:-Journeyfin CRM}"
-    IMAGE_NAME="${IMAGE_NAME:-cargoyard-crmy}"
-    BASE_IMAGE_NAME="${BASE_IMAGE_NAME:-fedora-bootc}"
-else
-    IMAGE_PRETTY_NAME="${IMAGE_PRETTY_NAME:-Journeyfin}"
-    IMAGE_NAME="${IMAGE_NAME:-cargoyard}"
-    BASE_IMAGE_NAME="${BASE_IMAGE_NAME:-silverblue}"
-fi
+IMAGE_PRETTY_NAME="${IMAGE_PRETTY_NAME:-Containerino}"
+IMAGE_NAME="${IMAGE_NAME:-containerino}"
+BASE_IMAGE_NAME="${BASE_IMAGE_NAME:-arch-bootc}"
+IMAGE_LIKE="${IMAGE_LIKE:-arch}"
 
-IMAGE_LIKE="${IMAGE_LIKE:-fedora}"
 HOME_URL="${HOME_URL:-https://github.com/${IMAGE_VENDOR}/${IMAGE_NAME}}"
 DOCUMENTATION_URL="${DOCUMENTATION_URL:-https://github.com/${IMAGE_VENDOR}/${IMAGE_NAME}/blob/main/README.md}"
 SUPPORT_URL="${SUPPORT_URL:-https://github.com/${IMAGE_VENDOR}/${IMAGE_NAME}/issues}"
@@ -79,8 +58,7 @@ cat >"${IMAGE_INFO}" <<EOF
   "image-vendor": "${IMAGE_VENDOR}",
   "image-ref": "${IMAGE_REF}",
   "image-tag": "${UBLUE_IMAGE_TAG}",
-  "base-image-name": "${BASE_IMAGE_NAME}",
-  "fedora-version": "${FEDORA_MAJOR_VERSION}"
+  "base-image-name": "${BASE_IMAGE_NAME}"
 }
 EOF
 

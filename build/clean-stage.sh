@@ -1,4 +1,4 @@
-#!/usr/bin/bash
+#!/usr/bin/env bash
 
 echo "::group:: ===$(basename "$0")==="
 
@@ -9,21 +9,12 @@ set -eoux pipefail
 # Set to a temp directory during unit tests.
 CLEAN_ROOT="${CLEAN_ROOT:-/}"
 
-# Revert back to upstream defaults
-dnf5 config-manager setopt keepcache=0
-dnf5 versionlock clear
-
-# This comes last because we can't *ever* afford to ship fedora flatpaks on the image
-systemctl disable flatpak-add-fedora-repos.service
-systemctl mask flatpak-add-fedora-repos.service
-rm -f "${CLEAN_ROOT}/usr/lib/systemd/system/flatpak-add-fedora-repos.service"
-
 rm -rf "${CLEAN_ROOT}/.gitkeep"
 # Use -mindepth/-maxdepth instead of shell globs so these are no-ops when the
-# directories are empty (e.g. /var/cache/{libdnf5,rpm-ostree} only exist as
-# transient buildah cache mounts and are not present in this layer).
+# directories are empty (e.g. /var/cache/pacman only exists as a transient
+# buildah cache mount and is not present in this layer).
 find "${CLEAN_ROOT}/var" -mindepth 1 -maxdepth 1 -type d \! -name cache -exec rm -fr {} \;
-find "${CLEAN_ROOT}/var/cache" -mindepth 1 -maxdepth 1 -type d \! -name libdnf5 \! -name rpm-ostree -exec rm -fr {} \;
+find "${CLEAN_ROOT}/var/cache" -mindepth 1 -maxdepth 1 -type d \! -name pacman -exec rm -fr {} \;
 
 # Clear tmpfs-backed runtime directories without deleting the directories
 # themselves. Buildah may have bind mounts in these paths during RUN, so
@@ -40,8 +31,8 @@ for runtime_dir in tmp boot; do
 done
 
 # /run can contain nested bind mounts created by the build container. Walk it
-# depth-first so we can remove image-owned files like /run/dnf while leaving
-# mounted files and any directories that still contain them alone.
+# depth-first so we can remove image-owned files while leaving mounted files
+# and any directories that still contain them alone.
 mkdir -p "${CLEAN_ROOT:?}/run"
 find "${CLEAN_ROOT:?}/run" -mindepth 1 -depth -print0 |
 	while IFS= read -r -d '' entry; do

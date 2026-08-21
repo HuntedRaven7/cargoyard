@@ -1,40 +1,74 @@
-#!/usr/bin/bash
+#!/usr/bin/env bash
 
 set -euo pipefail
 
 ###############################################################################
-# Main Build Script
+# Edward Build Script (Arch base, pacman)
 ###############################################################################
-# This script follows the @ublue-os/bluefin pattern for build scripts.
-# It uses set -euo pipefail for strict error handling.
+# Base image: ghcr.io/huntedraven7/arch-bootc (Arch Linux — pacman, not dnf5).
+# Desktop: Hyprland + Quickshell.
 ###############################################################################
 
-# Read IMAGE_NAME and IMAGE_VARIANT from /etc/environment if not set
-if [[ -z "${IMAGE_NAME:-}" ]]; then
-    if [[ -f /etc/environment ]]; then
-        # shellcheck disable=SC1091
-        . /etc/environment
-    fi
+# Read IMAGE_NAME from /etc/environment if not set
+if [[ -z "${IMAGE_NAME:-}" ]] && [[ -f /etc/environment ]]; then
+    # shellcheck disable=SC1091
+    . /etc/environment
 fi
 
-# Default to edward variant if not set
-IMAGE_VARIANT="${IMAGE_VARIANT:-edward}"
+echo "::group:: Install Packages"
 
-# Source helper functions
-# shellcheck source=/dev/null
-source /ctx/build/copr-helpers.sh
+# Base tooling
+BASE_PACKAGES=(
+    rsync      # required for the brew overlay step
+    podman     # required by the container quadlets in system_files
+    flatpak    # required for /usr/share/flatpak/preinstall.d at first boot
+    tmux       # required by the default ujust recipes
+    gum        # required by the default ujust recipes for interactive prompts
+)
 
-# Enable nullglob for all glob operations to prevent failures on empty matches
-shopt -s nullglob
+# Hyprland desktop stack (all verified in Arch extra)
+DE_PACKAGES=(
+    hyprland                    # compositor
+    quickshell                  # shell/bar (Qt6 Quick)
+    uwsm                        # Universal Wayland Session Manager (session launch)
+    xdg-desktop-portal-hyprland # screencast/screenshots portal
+    xdg-desktop-portal-gtk      # file chooser portal fallback
+    xorg-xwayland               # X11 app support
+    polkit-gnome                # polkit authentication agent
+    greetd                      # display manager
+    greetd-tuigreet             # console greeter
+    fuzzel                      # app launcher
+    mako                        # notifications
+    grim                        # screenshots
+    slurp                       # region selection for grim
+    wl-clipboard                # wayland clipboard utilities
+    hyprpaper                   # wallpaper daemon
+    hypridle                    # idle daemon
+    hyprlock                    # lock screen
+    pipewire                    # audio/video server
+    wireplumber                 # pipewire session manager
+    pipewire-pulse              # pulseaudio compatibility
+    pipewire-alsa               # alsa compatibility
+    networkmanager              # network management
+    noto-fonts                  # base fonts
+    noto-fonts-emoji            # emoji fonts
+)
+
+pacman -Syu --noconfirm --needed "${BASE_PACKAGES[@]}" "${DE_PACKAGES[@]}"
+
+echo "::endgroup::"
 
 echo "::group:: Overlay Brew Integration Files"
 
-# Brew integration files from @ublue-os/brew OCI (tarball, systemd services, shell integration)
+# Brew integration files from @ublue-os/brew OCI (tarball, systemd services,
+# shell integration)
 rsync -rvK /ctx/oci/brew/ /
 
 echo "::endgroup::"
 
 echo "::group:: Copy Custom Files"
+
+shopt -s nullglob
 
 # Copy Brewfiles to standard location
 mkdir -p /usr/share/ublue-os/homebrew/
@@ -48,102 +82,42 @@ find /ctx/custom/ujust -iname '*.just' -exec printf "\n\n" \; -exec cat {} \; >>
 mkdir -p /usr/share/flatpak/preinstall.d/
 cp /ctx/custom/flatpaks/*.preinstall /usr/share/flatpak/preinstall.d/
 
-# Copy system files (container definitions, launchers, desktop entries, etc.)
-# Each variant has its own subdir under /ctx/system_files/
+# Copy system files (quadlets, launchers, desktop entries)
+cp -rf /ctx/system_files/. /
 
-# Always copy Edward-specific system files (default variant)
-if [ -d /ctx/system_files/edward ]; then
-    cp -rf /ctx/system_files/edward/. /
-fi
-
-# Copy Aira-specific system files if this is the aira variant
-if [[ "${IMAGE_VARIANT}" == "aira" ]] && [ -d /ctx/system_files/aira ]; then
-    cp -rf /ctx/system_files/aira/. /
-fi
-
-# Copy Server-specific system files if this is the server variant
-if [[ "${IMAGE_VARIANT}" == "server" ]] && [ -d /ctx/system_files/server ]; then
-    cp -rf /ctx/system_files/server/. /
-fi
-
-echo "::endgroup::"
-
-echo "::group:: Install Packages"
-
-# Install the default packages and verify the DNF cache is working.
-# gum is required by the default ujust recipes for interactive prompts.
-dnf5 install -y tmux gum
-
-# Variant-specific packages
-if [[ "${IMAGE_VARIANT}" == "aira" ]]; then
-    # Aira-specific packages
-    PACKAGES=(
-        git
-        neovim
-        kitty
-        alacritty
-    )
-    dnf5 install -y --skip-unavailable \
-        --setopt=install_weak_deps=False \
-        "${PACKAGES[@]}"
-elif [[ "${IMAGE_VARIANT}" == "server" ]]; then
-    # Server-specific packages
-    PACKAGES=(
-        openssh-server
-        git
-        htop
-        podman
-    )
-    dnf5 install -y --skip-unavailable \
-        --setopt=install_weak_deps=False \
-        "${PACKAGES[@]}"
-elif [[ "${IMAGE_VARIANT}" == "crmy" ]]; then
-    # CRMY-specific packages
-    PACKAGES=(
-        cockpit
-        cockpit-podman
-        openssh-server
-        git
-        tmux
-        htop
-    )
-    dnf5 install -y --skip-unavailable \
-        --setopt=install_weak_deps=False \
-        "${PACKAGES[@]}"
-fi
+shopt -u nullglob
 
 echo "::endgroup::"
 
 echo "::group:: System Configuration"
 
-# Enable/disable systemd services
 systemctl enable podman.socket
 systemctl enable brew-setup.service
 systemctl enable brew-update.timer
 systemctl enable brew-upgrade.timer
-# Example: systemctl mask unwanted-service
+systemctl enable NetworkManager.service
 
-# Aira-specific services
-if [[ "${IMAGE_VARIANT}" == "aira" ]]; then
-    systemctl enable setup-nix.service
-    systemctl enable install-aira-configs.service
-    systemctl enable setup-kwin-effects.service
-elif [[ "${IMAGE_VARIANT}" == "server" ]]; then
-    # Server-specific services
-    systemctl enable cockpit.service
-    systemctl enable sshd.service
-    # Enable quadlet auto-start (linger + podman-restart) for server users
-    chmod +x /usr/share/ublue-os/server/enable-quadlet-autostart.sh
-    systemctl enable cargoyard-quadlet-autostart.service
-elif [[ "${IMAGE_VARIANT}" == "crmy" ]]; then
-    # CRMY-specific services
-    systemctl enable cockpit.socket
-    systemctl enable sshd.service
-fi
+# Display manager: greetd + tuigreet (session list comes from wayland-sessions)
+mkdir -p /etc/greetd
+cat >/etc/greetd/config.toml <<EOF
+[terminal]
+vt = 1
+
+[default_session]
+command = "tuigreet --time --remember --remember-session"
+user = "greeter"
+EOF
+systemctl enable greetd.service
+
+# Audio: pre-enable PipeWire sockets for every user session; wireplumber is
+# pulled in by the drop-in below (its unit has no [Install] section)
+systemctl --global enable pipewire.socket pipewire-pulse.socket
+mkdir -p /etc/systemd/user/pipewire.service.d
+cat >/etc/systemd/user/pipewire.service.d/override.conf <<EOF
+[Unit]
+Wants=wireplumber.service
+EOF
 
 echo "::endgroup::"
 
-# Restore default glob behavior
-shopt -u nullglob
-
-echo "Custom build complete!"
+echo "containerino build complete!"

@@ -1,4 +1,4 @@
-# Copilot Instructions for cargoyard bootc Image Template
+# Copilot Instructions for containerino bootc Image
 
 ## Start here
 
@@ -139,5 +139,5 @@ Before marking work done:
 - [ ] Included that learning in this PR?
 
 **Last Updated**: 2026-08-05
-**Template Version**: cargoyard (Agent UX Overhaul)
+**Template Version**: containerino (Agent UX Overhaul)
 **Maintainer**: Universal Blue Community

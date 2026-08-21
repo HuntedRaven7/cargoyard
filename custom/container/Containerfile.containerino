@@ -1,12 +1,13 @@
 ###############################################################################
-# CARGOYARD SERVER CONTAINERFILE
+# CONTAINERINO CONTAINERFILE
 ###############################################################################
-# Minimal server image (uCore base).
+# containerino desktop image (Arch Linux bootc base, Hyprland + Quickshell).
 #
 # Usage:
-#   podman build -f custom/container/Containerfile.server -t cargoyard-server:stable .
+#   podman build -f custom/container/Containerfile.containerino -t containerino:stable .
 #
 # The project name is defined by IMAGE_NAME.
+# Build scripts live directly in build/ (pacman, not dnf5).
 ###############################################################################
 
 ###############################################################################
@@ -23,8 +24,8 @@ FROM scratch AS ctx
 COPY build /build
 COPY custom /custom
 
-# Copy variant-specific system files (quadlets, lid-switch drop-in, autostart)
-COPY custom/system_files/server /system_files/server
+# Copy system files (quadlets, launchers, desktop entries)
+COPY custom/system_files /system_files
 
 # Copy from OCI containers to distinct subdirectories to avoid conflicts
 COPY --from=common /system_files /oci/common
@@ -33,16 +34,16 @@ COPY --from=brew /system_files /oci/brew
 ###############################################################################
 # BASE IMAGE
 ###############################################################################
-FROM ghcr.io/ublue-os/ucore:stable@sha256:4416012063356218d748bafdb22bd98ef223642dffe0e5e6fd2729d650a0b9c8 AS base
+# Arch Linux bootc base. Digest pinned; Renovate keeps it fresh.
+FROM ghcr.io/huntedraven7/arch-bootc:testing@sha256:e257cd66ae88c8e46bce581eed786fb638d3355d1061197be9fbc8061b3e7533 AS base
 
 ###############################################################################
-# VARIANT IMAGE
+# IMAGE IDENTITY
 ###############################################################################
-ARG IMAGE_VARIANT="server"
 ARG IMAGE_VENDOR="huntedraven7"
 ARG UBLUE_IMAGE_TAG="stable"
 ARG VERSION=""
-ARG IMAGE_NAME="cargoyard-server"
+ARG IMAGE_NAME="containerino"
 
 # hadolint ignore=SC3040
 RUN <<SET_NAME
@@ -54,7 +55,6 @@ echo "IMAGE_NAME=${IMAGE_NAME}" >> /etc/environment
 SET_NAME
 
 ARG BASE_IMAGE_NAME_DEFAULT
-ARG FEDORA_MAJOR_VERSION="44"
 
 ### MODIFICATIONS
 ## The RUN directives below mount the ctx stage, which includes build scripts,
@@ -65,17 +65,10 @@ RUN --mount=type=bind,from=ctx,source=/,target=/ctx \
     --mount=type=tmpfs,dst=/tmp \
     /ctx/build/00-image-info.sh
 
-# Set dnf options before build scripts (persists across subsequent RUN layers).
-# Break the ostree hardlink first: base images ship /etc/dnf/dnf.conf as a
-# hardlink into the object store. Writing to it in-place under buildah/btrfs
-# corrupts the file (NUL bytes appended). Copy -> mv breaks the link safely.
-RUN cp /etc/dnf/dnf.conf /etc/dnf/dnf.conf.tmp && \
-    mv /etc/dnf/dnf.conf.tmp /etc/dnf/dnf.conf && \
-    dnf5 config-manager setopt keepcache=1 install_weak_deps=0
-
+# Arch base: no dnf.conf hardlink workaround needed. The pacman package cache
+# is mounted so repeat builds reuse downloaded packages.
 RUN --mount=type=bind,from=ctx,source=/,target=/ctx \
-    --mount=type=cache,dst=/var/cache/libdnf5 \
-    --mount=type=cache,dst=/var/cache/rpm-ostree \
+    --mount=type=cache,dst=/var/cache/pacman/pkg \
     --mount=type=secret,id=GITHUB_TOKEN \
     --mount=type=tmpfs,dst=/boot \
     --mount=type=tmpfs,dst=/tmp \

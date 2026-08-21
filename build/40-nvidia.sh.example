@@ -3,9 +3,9 @@ set -euo pipefail
 
 # Description: NVIDIA GPU driver and container toolkit setup (example)
 # Activate by:
-#   1. mv build/40-nvidia.sh.example build/40-nvidia.sh
-#   2. Add an explicit RUN block for /ctx/build/40-nvidia.sh after 10-build.sh
-#      in Containerfile. See build/README.md for the standard block.
+#   1. mv build/40-nvidia.sh.example build/<variant>/40-nvidia.sh
+#   2. Add an explicit RUN block for /ctx/build/<variant>/40-nvidia.sh after
+#      10-build.sh in that variant's Containerfile. See build/README.md.
 #
 # This script provisions NVIDIA GPU support directly into the base image.
 # Deactivate by removing its Containerfile RUN block and renaming it back to
