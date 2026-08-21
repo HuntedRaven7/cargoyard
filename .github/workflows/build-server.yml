@@ -1,12 +1,9 @@
 ---
-name: Build Friends
+name: Build Server
 
-# Matrix build for the bootc sibling images in friends/. Each variant builds
-# through `just build` with its own build/<variant>/ + custom/<variant>/ dirs.
-# server/ and ai/ live outside friends/ with their own workflows.
-#
-# Tag convention matches build-image.yml: main publishes :stable-testing,
-# stable publishes :stable.
+# cargoyard-server (uCore base) — lives outside friends/ with its own
+# workflow. Tag convention matches build-image.yml: main publishes
+# :stable-testing, stable publishes :stable.
 
 on:
   push:
@@ -22,8 +19,10 @@ permissions:
   packages: write
 
 env:
+  IMAGE_NAME: "cargoyard-server"
   IMAGE_REGISTRY: "ghcr.io/${{ github.repository_owner }}"
   PRODUCTION_BRANCH: "stable"
+  REGISTRY_CACHE_WRITE: "1"
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref || github.run_id }}
@@ -31,27 +30,12 @@ concurrency:
 
 jobs:
   build:
-    name: Build ${{ matrix.variant }}
+    name: Build server
     runs-on: ubuntu-24.04
     timeout-minutes: 240
     permissions:
       contents: read
       packages: write
-
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - variant: aira
-            image_name: cargoyard-aira
-            containerfile: friends/aira/Containerfile
-          - variant: crmy
-            image_name: cargoyard-crmy
-            containerfile: friends/crmy/Containerfile
-
-    env:
-      IMAGE_NAME: ${{ matrix.image_name }}
-      REGISTRY_CACHE_WRITE: "1"
 
     steps:
       - name: Prepare environment
@@ -110,7 +94,7 @@ jobs:
           command: |
             sudo -E "$(command -v just)" build "${IMAGE_NAME}" \
               "${{ steps.determine-tag.outputs.default-tag }}" \
-              "${{ matrix.containerfile }}"
+              "server/Containerfile"
 
       - name: Get version label
         id: version

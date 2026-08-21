@@ -72,12 +72,16 @@ custom/
 ├── aira/  ├── crmy/  └── server/
 
 friends/
-├── <variant>/Containerfile  # context is the REPO ROOT:
-│                            #   COPY build/<variant> /build
-│                            #   COPY custom/<variant> /custom
-│                            #   COPY friends/<variant>/system_files /system_files
-├── <variant>/system_files/  # variant quadlets/desktop entries (aira/server/ai)
-└── ai/                      # app container: no build/ or custom/ dirs
+├── aira/                    # Containerfile + system_files/
+└── crmy/                    # Containerfile only (no system_files)
+# Each friend Containerfile uses the REPO ROOT as context:
+#   COPY build/<variant> /build
+#   COPY custom/<variant> /custom
+#   COPY friends/<variant>/system_files /system_files
+
+server/                       # bootc sibling OUTSIDE friends/: own workflow
+ai/                           # app container (CUDA+Brew): no build/ or custom/,
+                              #   own workflow; quadlet under ai/system_files/
 ```
 
 - **edward's package manager is pacman**: `pacman -Syu --noconfirm --needed ...`.
@@ -86,8 +90,9 @@ friends/
   `/ctx/build/10-build.sh` → `/ctx/build/clean-stage.sh` from its variant dir.
 - No `FEDORA_MAJOR_VERSION` ARG in edward; `00-image-info.sh` omits the JSON
   field and the Justfile build recipe falls back to date-only version strings.
-- Friends are built by the matrix in `.github/workflows/build-friends.yml`
-  (`finpilot-ci`). `ai` is built with plain podman, not `just build`.
+- aira/crmy are built by the matrix in `.github/workflows/build-friends.yml`,
+  server by `build-server.yml`; `ai` is built with plain podman by
+  `build-ai.yml` (not `just build`).
 - `copr-helpers.sh` exists only under `build/{aira,crmy,server}/` (COPR is
   dnf5-only). The `.example` scripts reference it only as archived templates.
 

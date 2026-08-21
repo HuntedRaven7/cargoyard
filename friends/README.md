@@ -1,8 +1,8 @@
 # Friends
 
-Sibling images that live alongside `edward` in this repo. Each folder holds a
-Containerfile plus its variant-specific system files; shared assets are
-centralized at the repo root per variant:
+Bootc sibling images that live alongside `edward` in this repo. Each folder
+holds a Containerfile plus its variant-specific system files; shared assets
+are centralized at the repo root per variant:
 
 ```
 <variant>/
@@ -21,19 +21,22 @@ From the repo root (the COPY paths in each Containerfile are relative to it):
 podman build -f friends/<variant>/Containerfile -t <image-name>:stable .
 ```
 
-CI builds all variants via the matrix in
+CI builds both variants via the matrix in
 `.github/workflows/build-friends.yml`. Base images are digest-pinned in each
 Containerfile's `FROM` lines; Renovate updates them.
 
 ## Variants
 
-| Folder | Image            | Base                          | Package manager |
-| ------ | ---------------- | ----------------------------- | --------------- |
-| aira   | cargoyard-aira   | ghcr.io/ublue-os/bazzite      | dnf5            |
-| crmy   | cargoyard-crmy   | quay.io/fedora/fedora-bootc   | dnf5            |
-| server | cargoyard-server | ghcr.io/ublue-os/ucore        | dnf5            |
-| ai     | ai               | docker.io/nvidia/cuda (ubuntu)| brew            |
+| Folder | Image          | Base                       | Package manager |
+| ------ | -------------- | -------------------------- | --------------- |
+| aira   | cargoyard-aira | ghcr.io/ublue-os/bazzite   | dnf5            |
+| crmy   | cargoyard-crmy | quay.io/fedora/fedora-bootc| dnf5            |
 
-The `ai` folder differs from the bootc variants above: it is a plain
-application container (CUDA + Brew), so it has no `build/` or `custom/` —
-just a `Containerfile` and its quadlet/desktop entry under `system_files/`.
+## Outside friends/
+
+Two siblings live in their own top-level directories with their own workflows:
+
+| Folder  | Image            | Workflow                          | Kind                |
+| ------- | ---------------- | --------------------------------- | ------------------- |
+| server/ | cargoyard-server | `.github/workflows/build-server.yml` | bootc (uCore)    |
+| ai/     | ai               | `.github/workflows/build-ai.yml`     | app container (CUDA + Brew) |
