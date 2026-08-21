@@ -9,8 +9,8 @@ set -euo pipefail
 # Desktop: Hyprland + Quickshell.
 ###############################################################################
 
-# Read IMAGE_NAME from /etc/environment if not set
-if [[ -z "${IMAGE_NAME:-}" ]] && [[ -f /etc/environment ]]; then
+# Read build-time settings from /etc/environment if not already in the env
+if { [[ -z "${IMAGE_NAME:-}" ]] || [[ -z "${SDDM_USER:-}" ]]; } && [[ -f /etc/environment ]]; then
     # shellcheck disable=SC1091
     . /etc/environment
 fi
@@ -26,35 +26,48 @@ BASE_PACKAGES=(
     gum        # required by the default ujust recipes for interactive prompts
 )
 
-# Hyprland desktop stack (all verified in Arch extra)
-DE_PACKAGES=(
-    hyprland                    # compositor
-    quickshell                  # shell/bar (Qt6 Quick)
-    uwsm                        # Universal Wayland Session Manager (session launch)
-    xdg-desktop-portal-hyprland # screencast/screenshots portal
-    xdg-desktop-portal-gtk      # file chooser portal fallback
-    xorg-xwayland               # X11 app support
-    polkit-gnome                # polkit authentication agent
-    greetd                      # display manager
-    greetd-tuigreet             # console greeter
-    fuzzel                      # app launcher
-    mako                        # notifications
-    grim                        # screenshots
-    slurp                       # region selection for grim
-    wl-clipboard                # wayland clipboard utilities
-    hyprpaper                   # wallpaper daemon
-    hypridle                    # idle daemon
-    hyprlock                    # lock screen
-    pipewire                    # audio/video server
-    wireplumber                 # pipewire session manager
-    pipewire-pulse              # pulseaudio compatibility
-    pipewire-alsa               # alsa compatibility
-    networkmanager              # network management
-    noto-fonts                  # base fonts
-    noto-fonts-emoji            # emoji fonts
+
+NVIDIA_PACKAGES=(
+    nvidia-open-dkms
 )
 
-pacman -Syu --noconfirm --needed "${BASE_PACKAGES[@]}" "${DE_PACKAGES[@]}"
+DE_PACKAGES=(
+    hyprland                    
+    quickshell                  
+    uwsm                        
+    xdg-desktop-portal-hyprland 
+    xdg-desktop-portal-gtk      
+    xorg-xwayland               
+    polkit-gnome                
+    sddm                        
+    xorg-server                 
+    fuzzel                      
+    mako                        
+    grim                        
+    slurp                       
+    wl-clipboard                
+    hyprpaper                   
+    hypridle                    
+    hyprlock                    
+    pipewire                    
+    wireplumber                 
+    pipewire-pulse              
+    pipewire-alsa               
+    networkmanager              
+    noto-fonts                  
+    noto-fonts-emoji            
+    awww                        
+    ghostty 
+    kitty
+    alacritty
+    foot
+)
+
+GAMING_PACKAGES=(
+   steam 
+)
+
+pacman -Syu --noconfirm --needed "${BASE_PACKAGES[@]}" "${NVIDIA_PACKAGES[@]}" "${GAMING_PACKAGES[@]}" "${DE_PACKAGES[@]}"
 
 echo "::endgroup::"
 
@@ -97,17 +110,18 @@ systemctl enable brew-update.timer
 systemctl enable brew-upgrade.timer
 systemctl enable NetworkManager.service
 
-# Display manager: greetd + tuigreet (session list comes from wayland-sessions)
-mkdir -p /etc/greetd
-cat >/etc/greetd/config.toml <<EOF
-[terminal]
-vt = 1
-
-[default_session]
-command = "tuigreet --time --remember --remember-session"
-user = "greeter"
+# Display manager: SDDM with autologin into the uwsm-managed Hyprland session.
+# SDDM_USER comes from the Containerfile ARG (persisted to /etc/environment).
+# On manual logout the standard SDDM greeter takes over; xorg-server provides
+# its default X11 display server.
+mkdir -p /etc/sddm.conf.d
+cat >/etc/sddm.conf.d/autologin.conf <<EOF
+[Autologin]
+User=${SDDM_USER}
+Session=hyprland-uwsm.desktop
+Relogin=false
 EOF
-systemctl enable greetd.service
+systemctl enable sddm.service
 
 # Audio: pre-enable PipeWire sockets for every user session; wireplumber is
 # pulled in by the drop-in below (its unit has no [Install] section)
