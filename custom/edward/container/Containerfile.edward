@@ -35,7 +35,7 @@ COPY --from=brew /system_files /oci/brew
 # BASE IMAGE
 ###############################################################################
 # Arch Linux bootc base. Digest pinned; Renovate keeps it fresh.
-FROM ghcr.io/huntedraven7/arch-bootc:testing@sha256:92eb01703afd4b59a437d9dc1fc3d283b1b067d178999cb6856d513c5f4bee69 AS base
+FROM ghcr.io/huntedraven7/arch-bootc:testing@sha256:fc15da1cac145fde3560419c4ff844f230f6d366809db30d734cb7d967263e40 AS base
 
 ###############################################################################
 # IMAGE IDENTITY
