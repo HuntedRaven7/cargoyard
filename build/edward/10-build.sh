@@ -30,11 +30,13 @@ BASE_PACKAGES=(
     tmux       # required by the default ujust recipes
     gum        # required by the default ujust recipes for interactive prompts
     linux-headers
+    git
 )
 
 
 NVIDIA_PACKAGES=(
-    nvidia-open
+    nvidia-open-dkms 
+    lib32-nvidia-utils
 )
 
 DE_PACKAGES=(
