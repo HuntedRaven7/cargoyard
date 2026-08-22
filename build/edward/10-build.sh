@@ -22,6 +22,8 @@ echo "::endgroup::"
 
 echo "::group:: Install Packages"
 
+mkdir -p /var/tmp
+
 # Base tooling
 BASE_PACKAGES=(
     rsync      # required for the brew overlay step
