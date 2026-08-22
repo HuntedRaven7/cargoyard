@@ -15,6 +15,11 @@ if { [[ -z "${IMAGE_NAME:-}" ]] || [[ -z "${SDDM_USER:-}" ]]; } && [[ -f /etc/en
     . /etc/environment
 fi
 
+echo "::group:: pacman state"
+grep -n 'multilib\|^Include\|^Server' /etc/pacman.conf /etc/pacman.d/mirrorlist
+ls -la /etc/pacman.conf.d/ 2>/dev/null || true
+echo "::endgroup::"
+
 echo "::group:: Install Packages"
 
 # Base tooling
