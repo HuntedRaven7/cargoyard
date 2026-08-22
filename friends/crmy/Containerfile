@@ -33,7 +33,7 @@ COPY --from=brew /system_files /oci/brew
 ###############################################################################
 # BASE IMAGE
 ###############################################################################
-FROM quay.io/fedora/fedora-bootc:44@sha256:2e936261e1f1cc50ee2f42efc31b610a41b3420139a108111b6fe2710cb6c6b5 AS base
+FROM quay.io/fedora/fedora-bootc:44@sha256:3a5e74e668761be9e16c6779950ae154d9dcbb0861d1e92140c0751fed1f5357 AS base
 
 ###############################################################################
 # VARIANT IMAGE
