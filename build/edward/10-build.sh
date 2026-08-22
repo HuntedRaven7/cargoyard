@@ -62,7 +62,6 @@ DE_PACKAGES=(
     networkmanager              
     noto-fonts                  
     noto-fonts-emoji            
-    awww                        
     ghostty 
     kitty
     alacritty
