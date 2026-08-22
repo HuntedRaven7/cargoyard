@@ -1,9 +1,8 @@
-export IMAGE_NAME := env("IMAGE_NAME", "cargoyard")
+export IMAGE_NAME := env("IMAGE_NAME", "edward")
 export DEFAULT_TAG := env("DEFAULT_TAG", "stable")
 export PODMAN := env("PODMAN", "podman")
 export REPO_ORG := env("GITHUB_REPOSITORY_OWNER", "huntedraven7")
 export bib_image := env("BIB_IMAGE", "quay.io/centos-bootc/bootc-image-builder:latest@sha256:2b52843ea2bfda73b0a08d97e76b734393b1d3a804681b9fabb26723bd3a2f0b")
-export IMAGE_VARIANT := env("IMAGE_VARIANT", "edward")
 
 alias build-vm := build-qcow2
 alias rebuild-vm := rebuild-qcow2
@@ -90,23 +89,30 @@ sudoif command *args:
 #
 
 # Build the image using the specified parameters
-build $target_image=IMAGE_NAME $tag=DEFAULT_TAG $containerfile="custom/container/Containerfile.edward":
+build $target_image=IMAGE_NAME $tag=DEFAULT_TAG $containerfile="custom/edward/container/Containerfile.edward":
     #!/usr/bin/env bash
 
-    # Read the Fedora major version from the per-variant Containerfile (single source of truth).
-    # The base image itself is pinned in that Containerfile's FROM line.
+    # Read the base version from the per-variant Containerfile (single source
+    # of truth). The base image itself is pinned in that Containerfile's FROM
+    # line. Fedora variants set FEDORA_MAJOR_VERSION; non-Fedora bases (e.g.
+    # Edward's Arch image) omit it and fall back to a date-only version.
     fedora_version=$(grep -E '^ARG FEDORA_MAJOR_VERSION=' "${containerfile}" | head -n1 | sed -E 's/^ARG FEDORA_MAJOR_VERSION="?([^"]+)"?/\1/')
-    if [[ -z "${fedora_version:-}" ]]; then
-        echo "ERROR: Could not extract FEDORA_MAJOR_VERSION from ${containerfile}"
-        exit 1
-    fi
 
     # Bluefin-style version string: <fedora-version>.<date> for stable,
-    # <tag>-<fedora-version>.<date> for everything else.
-    if [[ "${tag}" =~ stable ]]; then
-        ver="${fedora_version}.$(date +%Y%m%d)"
+    # <tag>-<fedora-version>.<date> for everything else. Rolling bases use
+    # date-only strings.
+    if [[ -n "${fedora_version:-}" ]]; then
+        if [[ "${tag}" =~ stable ]]; then
+            ver="${fedora_version}.$(date +%Y%m%d)"
+        else
+            ver="${tag}-${fedora_version}.$(date +%Y%m%d)"
+        fi
     else
-        ver="${tag}-${fedora_version}.$(date +%Y%m%d)"
+        if [[ "${tag}" =~ stable ]]; then
+            ver="$(date +%Y%m%d)"
+        else
+            ver="${tag}-$(date +%Y%m%d)"
+        fi
     fi
 
     # Avoid tag collisions when rebuilding on the same day
@@ -125,9 +131,6 @@ build $target_image=IMAGE_NAME $tag=DEFAULT_TAG $containerfile="custom/container
 
     BUILD_ARGS=()
     BUILD_ARGS+=("--build-arg" "VERSION=${ver}")
-    if [[ -n "${IMAGE_VARIANT:-}" ]]; then
-        BUILD_ARGS+=("--build-arg" "IMAGE_VARIANT=${IMAGE_VARIANT}")
-    fi
     if [[ -z "$(git status -s)" ]]; then
         BUILD_ARGS+=("--build-arg" "SHA_HEAD_SHORT=$(git rev-parse --short HEAD)")
     fi
@@ -181,33 +184,12 @@ build $target_image=IMAGE_NAME $tag=DEFAULT_TAG $containerfile="custom/container
         --tag "${target_image}:${tag}" \
         .
 
-# Build the Aira image variant (KDE Plasma with Bazzite base)
-[group('Image')]
-build-aira $tag=DEFAULT_TAG:
-    #!/usr/bin/env bash
-    set -euo pipefail
-    IMAGE_VARIANT=aira IMAGE_NAME="cargoyard-aira" just build "cargoyard-aira" "${tag}" "custom/container/Containerfile.aira"
-
-# Build the Edward image variant (GNOME with Silverblue base)
+# Build the edward image (Arch bootc base, Hyprland + Quickshell)
 [group('Image')]
 build-edward $tag=DEFAULT_TAG:
     #!/usr/bin/env bash
     set -euo pipefail
-    IMAGE_VARIANT=edward IMAGE_NAME="cargoyard" just build "cargoyard" "${tag}" "custom/container/Containerfile.edward"
-
-# Build the Server image variant (Minimal server with uCore base)
-[group('Image')]
-build-server $tag=DEFAULT_TAG:
-    #!/usr/bin/env bash
-    set -euo pipefail
-    IMAGE_VARIANT=server IMAGE_NAME="cargoyard-server" just build "cargoyard-server" "${tag}" "custom/container/Containerfile.server"
-
-# Build the CRMY image variant (CRM server with Fedora bootc base)
-[group('Image')]
-build-crmy $tag=DEFAULT_TAG:
-    #!/usr/bin/env bash
-    set -euo pipefail
-    IMAGE_VARIANT=crmy IMAGE_NAME="cargoyard-crmy" just build "cargoyard-crmy" "${tag}" "custom/container/Containerfile.crmy"
+    IMAGE_NAME="edward" just build "edward" "${tag}" "custom/edward/container/Containerfile.edward"
 
 # Split the image for smaller updates (New)!
 # Rechunks the existing image with chunkah for better resumability.
@@ -370,9 +352,35 @@ build-qcow2 $target_image=("localhost/" + IMAGE_NAME) $tag=DEFAULT_TAG: && (_bui
 [group('Build Virtual Machine Image')]
 build-raw $target_image=("localhost/" + IMAGE_NAME) $tag=DEFAULT_TAG: && (_build-bib target_image tag "raw" "iso/disk.toml")
 
-# Build an ISO virtual machine image
+# Usage:
+#   just build-iso                              # ISO from the locally-built image
+#   just build-iso ghcr.io/owner/image:tag      # ISO from an existing image
+#
+# With a reference, `_build-bib` pulls that already-published image into rootful
+# podman (no local `just build` required) and hands it to bootc-image-builder.
+# Build an ISO virtual machine image, optionally from a registry image reference.
 [group('Build Virtual Machine Image')]
-build-iso $target_image=("localhost/" + IMAGE_NAME) $tag=DEFAULT_TAG: && (_build-bib target_image tag "iso" "iso/iso.toml")
+build-iso $image_ref="":
+    #!/usr/bin/env bash
+    set -euo pipefail
+
+    if [[ -n "${image_ref}" ]]; then
+        # Split registry/owner/image[:tag] into image and tag. The tag is the
+        # component after the last ':' that follows the final '/', so registry
+        # ports (e.g. localhost:5000/img) are preserved.
+        basename="${image_ref##*/}"
+        if [[ "${basename}" == *:* ]]; then
+            tag="${image_ref##*:}"
+            image="${image_ref%:*}"
+        else
+            tag="${DEFAULT_TAG}"
+            image="${image_ref}"
+        fi
+        just _build-bib "${image}" "${tag}" "iso" "iso/iso.toml"
+    else
+        # No reference: build the ISO from the locally-built image.
+        just _build-bib "localhost/${IMAGE_NAME}" "${DEFAULT_TAG}" "iso" "iso/iso.toml"
+    fi
 
 # Rebuild a QCOW2 virtual machine image
 [group('Build Virtual Machine Image')]

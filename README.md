@@ -1,6 +1,6 @@
-# cargoyard
+# edward
 
-A template for building custom bootc operating system images based on the lessons from [Universal Blue](https://universal-blue.org/) and [Bluefin](https://projectbluefin.io). It is designed to be used manually, but is optimized to be bootstraped by GitHub Copilot. After set up you'll have your own custom Linux.
+A custom bootc operating system image based on the lessons from [Universal Blue](https://universal-blue.org/) and [Bluefin](https://projectbluefin.io).
 
 This template uses the **multi-stage build architecture** from @projectbluefin/distroless, combining resources from multiple OCI containers for modularity and maintainability. See the [Architecture](#architecture) section below for details.
 
@@ -43,8 +43,8 @@ This template works best with **phased prompts** that let Copilot bootstrap your
 Use this prompt first to get your fork building:
 
 ```
-Bootstrap a new custom OS from @HuntedRaven7/cargoyard. Name it after this repository. Use the `cargoyard-onboarding` skill first, then:
-1. Rename `cargoyard` in the 7 required files
+Bootstrap a new custom OS from @HuntedRaven7/containerino. Name it after this repository. Use the `finpilot-onboarding` skill first, then:
+1. Rename the template placeholders in the 7 required files
 2. Enable GitHub Actions and set RENOVATE_TOKEN (repo + workflow scopes)
 3. Configure branch protection for `main` with `validate` as a required status check
 4. Enable auto-merge
@@ -57,7 +57,7 @@ Bootstrap a new custom OS from @HuntedRaven7/cargoyard. Name it after this repos
 Once the first build is green, use this prompt to add packages:
 
 ```
-Use the `cargoyard-packages` and `cargoyard-custom` skills, then:
+Use the `finpilot-packages` and `finpilot-custom` skills, then:
 1. Add one system package to the image in `build/10-build.sh`
 2. Add one CLI tool to `custom/brew/default.Brewfile`
 3. Add one GUI app to `custom/flatpaks/default.preinstall`
@@ -72,10 +72,10 @@ Use the `cargoyard-packages` and `cargoyard-custom` skills, then:
 When you are ready for production, use this prompt to harden the setup:
 
 ```
-Use the `cargoyard-maintain` and `cargoyard-ci` skills, then:
+Use the `finpilot-maintain` and `finpilot-ci` skills, then:
 1. Enable keyless image signing by uncommenting the step in `.github/workflows/build-image.yml`
 2. Verify the cosign command works: cosign verify --certificate-identity-regexp="https://github.com/USER/REPO/.github/workflows/" --certificate-oidc-issuer="https://token.actions.githubusercontent.com" ghcr.io/USER/REPO:stable
-3. Follow the maintenance schedule in the `cargoyard-maintain` skill
+3. Follow the maintenance schedule in the `finpilot-maintain` skill
 ```
 
 ## What's Included
@@ -128,9 +128,9 @@ Click "Use this template" to create a new repository from this template.
 
 ### 2. Rename the Project
 
-Important: Change `cargoyard` to your repository name in these 7 files:
+Important: The image name (`edward`) is referenced in these 7 files — keep them in sync if you ever rename again:
 
-1. `custom/container/Containerfile.edward` (`ARG IMAGE_NAME`): `# Name: your-repo-name`
+1. `custom/edward/container/Containerfile.edward` (`ARG IMAGE_NAME`): your-repo-name
 2. `Justfile` (`export IMAGE_NAME := env("IMAGE_NAME", ...)`): `your-repo-name`
 3. `README.md` (title): `# your-repo-name`
 4. `artifacthub-repo.yml` (`repositoryID`): `repositoryID: your-repo-name`
@@ -155,7 +155,7 @@ Renovate automatically updates dependencies and GitHub Actions (including workfl
 
 1. Go to GitHub → Settings → Developer settings → **Personal access tokens** → **Tokens (classic)**
 2. Click **Generate new token (classic)**
-3. Set a note like `renovate-cargoyard`
+3. Set a note like `renovate-containerino`
 4. Select scopes: **`repo`** (full control) and **`workflow`** (update workflows)
 5. Click **Generate token** and copy the value
 6. Go to your repository → Settings → Secrets and variables → Actions
@@ -175,10 +175,10 @@ Renovate will run every 6 hours and on config changes. It pins GitHub Actions to
 
 Repositories created with **Use this template** are independent repositories.
 Renovate keeps pinned dependencies current, but it does not copy arbitrary
-changes from cargoyard's `Containerfile`, build scripts, or workflows.
+changes from containerino's `Containerfile`, build scripts, or workflows.
 
 For a template improvement or build-system change, file a scoped
-[cargoyard issue](https://github.com/HuntedRaven7/cargoyard/issues/new/choose)
+[containerino issue](https://github.com/HuntedRaven7/containerino/issues/new/choose)
 instead of merging unrelated histories:
 
 - Select **"Opt in to a clanker working on my issue"** when creating your own
@@ -189,7 +189,7 @@ instead of merging unrelated histories:
 
 Review and port structural changes into your custom image deliberately through
 a pull request. This preserves your image-specific changes while sharing
-improvements with every future cargoyard user.
+improvements with every future containerino update.
 
 ### 6. Customize Your Image
 
@@ -205,7 +205,7 @@ configuration is provided by `@projectbluefin/common` earlier in the build.
 Add your packages in `build/10-build.sh`:
 
 ```bash
-dnf5 install -y package-name
+pacman -Syu --noconfirm --needed package-name  # Arch base
 ```
 
 Customize your apps:
@@ -290,7 +290,7 @@ Ready to take your custom OS to production? Enable these features for enhanced s
 
 The old rechunking recipe used `/usr/libexec/bootc-base-imagectl`, which is absent from many Universal Blue images. Do not copy that recipe or install a legacy rechunker: its layer format is not a safe migration path to the current implementation.
 
-Journeyfin instead uses the OCI-native [`bootc-build/chunka`](https://github.com/projectbluefin/actions/tree/main/bootc-build/chunka) action. The action runs chunkah from a pinned container and replaces the locally built image before the existing tag and push steps. The default Fedora Silverblue-based cargoyard image is RPM-based, so chunkah can discover components from its RPM database without `bootc-base-imagectl`.
+containerino uses the OCI-native [`bootc-build/chunka`](https://github.com/projectbluefin/actions/tree/main/bootc-build/chunka) action. The action runs chunkah from a pinned container and replaces the locally built image before the existing tag and push steps. The Arch-based image has no RPM database; leave rechunking disabled (the default) unless you verify chunkah handles pacman-based roots.
 
 To enable it, change the workflow environment value:
 

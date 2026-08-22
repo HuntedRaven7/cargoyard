@@ -39,6 +39,8 @@ description: >-
 | Build fails: "base image not found"    | Invalid `FROM` line or digest mismatch                                       | Check Containerfile syntax, verify base image tag and digest                                |
 | Build fails: "shellcheck error"        | Script syntax error in `build/*.sh`                                          | Run `shellcheck build/*.sh` locally, fix errors                                             |
 | `bootc container lint` fails           | Missing cleanup, leftover artifacts, or invalid image structure              | Run `build/clean-stage.sh` manually, check for stray files in `/opt` or `/var`              |
+| Lint fails: `nonempty-run-tmp` listing `/tmp/.X11-unix`, `.ICE-unix`, `.XIM-unix`, `.font-unix` | The arch-bootc base ships these dirs in its layer; a tmpfs mount over `/tmp` in the clean-stage RUN hides them from `clean-stage.sh` | Do NOT mount tmpfs at `/tmp` for the clean-stage RUN — let the script delete layer content (its `mountpoint -q` guard handles busy mounts) |
+| Lint crashes: `var-log: a path led outside of the filesystem` | `/var/log` missing from the image (arch-bootc base ships an empty `/var`; clean-stage wiped the rest) | Recreate `${CLEAN_ROOT}/var/log` (+ `var/tmp`) in `clean-stage.sh`; also keep `/var/lib` so `/var/lib/pacman` survives |
 | Podman/Docker not found                | Container runtime not installed                                              | Install `podman` or `docker`, ensure daemon is running                                      |
 | Base image pull fails                  | Network issue or invalid digest                                              | Verify network, check digest is correct, try `podman pull <base-image>` manually            |
 | Multi-stage build fails at `ctx` stage | Missing `COPY --from=` or invalid OCI image reference                        | Verify OCI image names and digests in `Containerfile` ctx stage                             |
@@ -69,7 +71,8 @@ description: >-
 | CI build fails: token health               | `RENOVATE_TOKEN` or `GITHUB_TOKEN` invalid/expired | Check token expiry, verify scopes, regenerate if needed                   |
 | CI build fails: signing misconfig          | Signing step uncommented but OIDC not configured   | Comment out signing step OR verify OIDC trust in repo settings            |
 | CI build fails: composite action not found | Wrong commit SHA or repo name in `uses:`           | Verify `projectbluefin/actions` SHA, check network access                 |
-| CI build succeeds but image not published  | Wrong `IMAGE_NAME` or `IMAGE_VENDOR`               | Check `Containerfile` ARGs, verify `clean.yml` package name matches       |
+| CI build succeeds but image not published  | Wrong `IMAGE_NAME` or `IMAGE_VENDOR`             | Check `Containerfile` ARGs, verify `clean.yml` package name matches       |
+| `promote-main-to-stable` fails: `git fetch origin ... stable` — "couldn't find remote ref stable" | `stable` branch was never created on the fork (onboarding §3 skipped) | Bootstrap per `.github/SETUP_CHECKLIST.md`: `git switch main && git switch -c stable && git push --set-upstream origin stable && git switch main` (seeds `stable` at the tested commit). The promote reusable then tree-compares and no-ops until `main` advances. |
 
 ## Runtime Issues
 
@@ -80,7 +83,7 @@ description: >-
 | `bootc switch` fails                    | Wrong image URL or missing registry credentials             | Verify bootc switch URL matches your repo (see `iso/iso.toml`), check registry access                                           |
 | `bootc switch` fails: "image not found" | Image not yet published to GHCR                             | Trigger a build on `main`, verify image appears under Packages                                                                  |
 | Service not starting                    | Service not enabled or missing dependency                   | Check `systemctl status service.name`, verify `systemctl enable` in `build/10-build.sh`                                         |
-| Missing package after boot              | Installed in wrong layer or runtime vs build-time confusion | Check if it's in `build/10-build.sh` (build-time) or `custom/brew/` (runtime)                                                   |
+| Missing package after boot              | Installed in wrong layer or runtime vs build-time confusion | Check if it's in `build/10-build.sh` (build-time) or `custom/<variant>/brew/` (runtime)                                                   |
 | `/opt` is not writable                  | `/opt` is symlinked to `/var/opt` by default                | In `Containerfile`, replace `RUN rm -rf /opt && ln -s /var/opt /opt` with `RUN rm /opt && mkdir /opt` if immutability is needed |
 
 ## Renovate Issues
