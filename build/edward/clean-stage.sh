@@ -31,6 +31,14 @@ mkdir -p "${CLEAN_ROOT}/var/log" "${CLEAN_ROOT}/var/tmp"
 # Runtime-generated XKB compilation cache; not image state.
 rm -rf "${CLEAN_ROOT}/var/lib/xkb"
 
+# DKMS build artifacts (kernel modules, make.log, MOK keys, source/kernel
+# symlinks) are generated at install time against the BUILD kernel, not the
+# running kernel. bootc images rebuild modules at first boot via
+# dkms.service, so strip the stale /var/lib/dkms tree before tmpfiles.d
+# generation — it would otherwise fail bootc's var-tmpfiles check (files
+# and undeclared symlinks in /var).
+rm -rf "${CLEAN_ROOT}/var/lib/dkms"
+
 # Declare every surviving /var directory via tmpfiles.d so bootc lint's
 # var-tmpfiles check passes and the dirs are recreated when /var starts
 # empty (fresh installs). Modes are captured from the image itself.

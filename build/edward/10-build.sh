@@ -34,7 +34,7 @@ BASE_PACKAGES=(
 
 
 NVIDIA_PACKAGES=(
-    nvidia-open-dkms
+    nvidia-open
 )
 
 DE_PACKAGES=(
@@ -117,6 +117,8 @@ systemctl enable brew-setup.service
 systemctl enable brew-update.timer
 systemctl enable brew-upgrade.timer
 systemctl enable NetworkManager.service
+
+systemctl enable dkms.service
 
 # Display manager: SDDM with autologin into the uwsm-managed Hyprland session.
 # SDDM_USER comes from the Containerfile ARG (persisted to /etc/environment).
