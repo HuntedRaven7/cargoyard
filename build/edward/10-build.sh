@@ -118,8 +118,6 @@ systemctl enable brew-update.timer
 systemctl enable brew-upgrade.timer
 systemctl enable NetworkManager.service
 
-systemctl enable dkms.service
-
 # Display manager: SDDM with autologin into the uwsm-managed Hyprland session.
 # SDDM_USER comes from the Containerfile ARG (persisted to /etc/environment).
 # On manual logout the standard SDDM greeter takes over; xorg-server provides
