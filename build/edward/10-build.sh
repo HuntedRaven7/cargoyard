@@ -29,6 +29,7 @@ BASE_PACKAGES=(
     flatpak    # required for /usr/share/flatpak/preinstall.d at first boot
     tmux       # required by the default ujust recipes
     gum        # required by the default ujust recipes for interactive prompts
+    linux-headers
 )
 
 
@@ -66,6 +67,8 @@ DE_PACKAGES=(
     kitty
     alacritty
     foot
+    nautilus
+    flatpak
 )
 
 GAMING_PACKAGES=(
